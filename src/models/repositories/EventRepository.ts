@@ -83,7 +83,7 @@ export class EventRepository implements IRepository {
             },
           },
           {
-            syllabus: {
+            description: {
               contains: args?.searchTerm,
             },
           },
