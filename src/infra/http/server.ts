@@ -3,9 +3,11 @@ import express, { NextFunction, Request, Response } from 'express';
 import 'express-async-errors';
 import { AppError } from '../http/errors/AppError';
 import { router } from './routes';
+import cors from "cors"
 
-const app = express();
+const app = express(); 
 
+app.use(cors())
 app.use(express.json());
 app.use(router);
 

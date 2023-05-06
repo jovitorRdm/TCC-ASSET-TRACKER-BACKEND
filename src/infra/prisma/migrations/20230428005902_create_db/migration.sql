@@ -2,7 +2,7 @@
 CREATE TABLE `event_types` (
     `id` VARCHAR(191) NOT NULL,
     `name` VARCHAR(120) NOT NULL,
-    `description` VARCHAR(191) NULL,
+    `description` VARCHAR(500) NULL,
     `status` ENUM('active', 'inactive') NOT NULL DEFAULT 'active',
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updated_at` DATETIME(3) NOT NULL,
