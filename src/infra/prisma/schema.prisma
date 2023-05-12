@@ -7,9 +7,22 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum PaymentMethod {
+  hour
+  day
+  event
+  peopleQuantity
+}
+
 enum Status {
   active
   inactive
+}
+
+enum UserType {
+  ADMIN // admin do sistema.
+  COLLABORATOR // colaborador / funcionario.
+  CLIENT // usuario / cliente.
 }
 
 model EventType {
@@ -22,3 +35,26 @@ model EventType {
 
   @@map("event_types")
 }
+
+model assignment {
+  id            String        @id @default(uuid())
+  name          String        @unique @db.VarChar(120)
+  description   String?       @db.VarChar(500)
+  paymentMethod PaymentMethod
+  paymentValue  Float
+  status        Status        @default(active)
+  createdAt     DateTime      @default(now()) @map("created_at")
+  updatedAt     DateTime      @updatedAt @map("updated_at")
+
+  @@map("assignment")
+}
+
+// model employee {
+//   id                 String   @id @default(uuid())
+//   name               String   @unique @db.VarChar(120)
+//   description        String?  @db.VarChar(500)
+//   userType           UserType @default(CLIENT)
+//   createdAt          DateTime @default(now()) @map("created_at")
+//   updatedAt          DateTime @updatedAt @map("updated_at")
+//   AccountRequirement Boolean  @default(false)
+// }
