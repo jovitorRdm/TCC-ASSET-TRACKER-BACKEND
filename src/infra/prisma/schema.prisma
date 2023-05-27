@@ -14,6 +14,11 @@ enum PaymentMethod {
   peopleQuantity
 }
 
+enum AccountType {
+  EventAdministrator
+  Receptionist
+}
+
 enum Status {
   active
   inactive
@@ -37,24 +42,24 @@ model EventType {
 }
 
 model assignment {
-  id            String        @id @default(uuid())
-  name          String        @unique @db.VarChar(120)
-  description   String?       @db.VarChar(500)
-  paymentMethod PaymentMethod
-  paymentValue  Float
-  status        Status        @default(active)
-  createdAt     DateTime      @default(now()) @map("created_at")
-  updatedAt     DateTime      @updatedAt @map("updated_at")
+  id                 String        @id @default(uuid())
+  name               String        @unique @db.VarChar(120)
+  description        String?       @db.VarChar(500)
+  paymentMethod      PaymentMethod
+  paymentValue       Float
+  status             Status        @default(active)
+  accountRequirement Boolean       @default(false)
+  accountType        AccountType?
+  createdAt          DateTime      @default(now()) @map("created_at")
+  updatedAt          DateTime      @updatedAt @map("updated_at")
 
   @@map("assignment")
 }
 
-// model employee {
-//   id                 String   @id @default(uuid())
-//   name               String   @unique @db.VarChar(120)
-//   description        String?  @db.VarChar(500)
-//   userType           UserType @default(CLIENT)
-//   createdAt          DateTime @default(now()) @map("created_at")
-//   updatedAt          DateTime @updatedAt @map("updated_at")
-//   AccountRequirement Boolean  @default(false)
-// }
+model account {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+}

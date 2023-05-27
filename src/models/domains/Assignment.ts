@@ -1,14 +1,16 @@
 import { z } from 'zod';
 import { AppError, ErrorMessages } from '../../infra/http/errors';
-import { GenericStatus, PaymentMethod } from '../dtos';
+import { AccountType, GenericStatus, PaymentMethod } from '../dtos';
 import {  } from '@prisma/client';
 
 export class Assignment {
     constructor(
         private _name: string,
-        private _description?: string | null,
-        private _paymentMethod?: PaymentMethod,
-        private _paymentValue?: number,
+        private _description: string | null,
+        private _paymentMethod: PaymentMethod,
+        private _paymentValue: number,
+        private _accountRequirement: boolean,
+        private _accountType?: AccountType,
         private _id?: string,
         private _status?: GenericStatus,
     ) { }
@@ -34,6 +36,14 @@ export class Assignment {
 
     get paymentValue() {
         return this._paymentValue!;
+    }
+
+    get accountRequirement() {
+        return this._accountRequirement!;
+    }
+
+    get accountType() {
+        return this._accountType!;
     }
 
     get status() {
@@ -63,6 +73,14 @@ export class Assignment {
         this._paymentValue = paymentValue;
     }
 
+    set accountRequirement(accountRequirement: boolean) {
+        this._accountRequirement = accountRequirement;
+    }
+
+    set accountType(accountType: AccountType) {
+        this._accountType = accountType;
+    }
+
     set status(status: GenericStatus) {
         this._status = status;
     }
@@ -74,6 +92,8 @@ export class Assignment {
             description: this.description,
             paymentMethod: this.paymentMethod,
             paymentValue: this.paymentValue,
+            accountType: this.accountType,
+            accountRequired: this.accountRequirement,
             status: this.status,
         };
     }
@@ -88,7 +108,11 @@ export class Assignment {
                 }),
                 paymentMethod: z.enum([PaymentMethod.DAY, PaymentMethod.HOUR, PaymentMethod.PEOPLE_QUANTITY, PaymentMethod.EVENT ], {
                     errorMap: () =>
-                        new AppError(`'${this._status}' não é um tipo de pagamento válido`),
+                        new AppError(`'${this._paymentMethod}' não é um tipo de pagamento válido`),
+                }),
+                accountType: z.enum([AccountType.EVENTADMINISTRATOR, AccountType.RECEPTIONIST], {
+                    errorMap: () =>
+                        new AppError(`'${this._accountType}' não é um tipo de conta válida`),
                 }),
                 name: z
                     .string({ required_error: ErrorMessages.requiredFields })
@@ -102,7 +126,7 @@ export class Assignment {
                     .number({ required_error: ErrorMessages.requiredFields })
                     .gt(0, 'Valor deve ser maior que 0'),
             })
-            .partial({ id: true, status: true});
+            .partial({ id: true, status: true, accountType: !this._accountRequirement? true : undefined });
 
         try {
             AssignmentSchema.parse(this);

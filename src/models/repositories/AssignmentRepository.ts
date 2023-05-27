@@ -4,10 +4,14 @@ import { AppError, ErrorMessages } from "../../infra/http/errors";
 import { prismaClient } from "../../infra/prisma";
 import { FindAllArgs, FindAllReturn, IRepository } from "../../interfaces";
 import { Assignment } from "../domains";
-import { GenericStatus, PaymentMethod, UpdateAssignmentDTO } from "../dtos";
+import { AccountType, CreateAssignmentDTO, GenericStatus, PaymentMethod, UpdateAssignmentDTO } from "../dtos";
+
+
 
 export class AssignmentRepository implements IRepository {
-  async create({ name, description, paymentMethod, paymentValue }) {
+
+  
+  async create({ name, description, paymentMethod, paymentValue, accountRequirement, accountType }: CreateAssignmentDTO) {
     const AssignmentEvent = await prismaClient.assignment.findFirst({
       where: {
         name
@@ -18,21 +22,25 @@ export class AssignmentRepository implements IRepository {
       throw new AppError(ErrorMessages.alreadyExists);
     }
 
-    const assignment = new Assignment(name, description, paymentMethod, paymentValue); 
-
+    const assignment = new Assignment(name, description, paymentMethod, paymentValue, accountRequirement, accountType);
     assignment.validate();
 
+    const createAssignmentData: any = {
+      name: assignment.name,
+      description: assignment.description,
+      paymentMethod: assignment.paymentMethod,
+      paymentValue: assignment.paymentValue,
+      accountRequirement: accountRequirement,
+      accountType: accountType
+    };
+
     const createAssignment = await prismaClient.assignment.create({
-      data: {
-        name : assignment.name,
-        description : assignment.description,
-        paymentMethod : assignment.paymentMethod,
-        paymentValue : assignment.paymentValue,
-      }
+      data: createAssignmentData,
     });
 
     return excludeFields(createAssignment, ['createdAt', 'updatedAt'])
   }
+
   async update(id: string, data: UpdateAssignmentDTO) {
     try {
       const assignmentToUpdate = await prismaClient.assignment.findUniqueOrThrow({ where: { id } });
@@ -42,8 +50,8 @@ export class AssignmentRepository implements IRepository {
         assignmentToUpdate.description,
         assignmentToUpdate.paymentMethod as PaymentMethod,
         assignmentToUpdate.paymentValue,
-        assignmentToUpdate.id,
-        assignmentToUpdate.status as GenericStatus,
+        assignmentToUpdate.accountRequirement,
+        assignmentToUpdate.accountType as AccountType,
       );
 
       if (data.name !== undefined) assignment.name = data.name;
@@ -51,12 +59,12 @@ export class AssignmentRepository implements IRepository {
       if (data.status !== undefined) assignment.status = data.status;
       if (data.paymentMethod !== undefined) assignment.paymentMethod = data.paymentMethod; 
       if (data.paymentValue !== undefined) assignment.paymentValue = data.paymentValue;
-
-      
+      if (data.accountRequirement !== undefined) assignment.accountRequired = data.accountRequirement;
+      if (data.accountType !== undefined) assignment.accountType = data.accountType;
 
       assignment.validate();
 
-      if ( assignment.name !== assignmentToUpdate.name) {
+      if (assignment.name !== assignmentToUpdate.name) {
         const existingAssignment = await prismaClient.assignment.findUnique({
           where: { name: assignment.name }
         });
@@ -66,15 +74,19 @@ export class AssignmentRepository implements IRepository {
         }
       }
 
+      const updatedAssignmentData: any = {
+        name: assignment.name,
+        description: assignment.description,
+        status: assignment.status,
+        paymentMethod: assignment.paymentMethod,
+        paymentValue: assignment.paymentValue,
+        accountRequirement: assignment.accountRequired,
+        accountType: assignment.accountType
+      };
+
       const updatedAssignment = await prismaClient.assignment.update({
         where: { id },
-        data: {
-          name: assignment.name,
-          description: assignment.description,
-          status:  assignment.status,
-          paymentMethod: assignment.paymentMethod,
-          paymentValue: assignment.paymentValue,
-        }
+        data: updatedAssignmentData,
       });
 
       return excludeFields(updatedAssignment, ['createdAt', 'updatedAt']);
@@ -84,6 +96,8 @@ export class AssignmentRepository implements IRepository {
       throw new AppError(ErrorMessages.notFound, 404);
     }
   }
+  
+
   async findAll(args: FindAllArgs) {
     const where = {
       OR: args.searchTerm
