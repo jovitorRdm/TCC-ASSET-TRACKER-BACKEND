@@ -59,7 +59,7 @@ export class AssignmentRepository implements IRepository {
       if (data.status !== undefined) assignment.status = data.status;
       if (data.paymentMethod !== undefined) assignment.paymentMethod = data.paymentMethod; 
       if (data.paymentValue !== undefined) assignment.paymentValue = data.paymentValue;
-      if (data.accountRequirement !== undefined) assignment.accountRequired = data.accountRequirement;
+      if (data.accountRequirement !== undefined) assignment.accountRequirement = data.accountRequirement;
       if (data.accountType !== undefined) assignment.accountType = data.accountType;
 
       assignment.validate();
@@ -80,7 +80,7 @@ export class AssignmentRepository implements IRepository {
         status: assignment.status,
         paymentMethod: assignment.paymentMethod,
         paymentValue: assignment.paymentValue,
-        accountRequirement: assignment.accountRequired,
+        accountRequirement: assignment.accountRequirement,
         accountType: assignment.accountType
       };
 

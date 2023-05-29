@@ -24,12 +24,6 @@ enum Status {
   inactive
 }
 
-enum UserType {
-  ADMIN // admin do sistema.
-  COLLABORATOR // colaborador / funcionario.
-  CLIENT // usuario / cliente.
-}
-
 model EventType {
   id          String   @id @default(uuid())
   name        String   @unique @db.VarChar(120)
@@ -41,7 +35,7 @@ model EventType {
   @@map("event_types")
 }
 
-model assignment {
+model Assignment {
   id                 String        @id @default(uuid())
   name               String        @unique @db.VarChar(120)
   description        String?       @db.VarChar(500)
@@ -52,14 +46,51 @@ model assignment {
   accountType        AccountType?
   createdAt          DateTime      @default(now()) @map("created_at")
   updatedAt          DateTime      @updatedAt @map("updated_at")
+  Employee           Employee[]
 
   @@map("assignment")
 }
 
-model account {
+model Account {
   id        String   @id @default(uuid())
   email     String   @unique
   password  String
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("account")
+}
+
+model Address {
+  id           String    @id @default(uuid())
+  cep          String    @db.VarChar(8)
+  city         String    @db.VarChar(120)
+  state        String    @db.VarChar(2)
+  neighborhood String    @db.VarChar(120)
+  street       String    @db.VarChar(120)
+  number       String    @db.VarChar(10)
+  employee     Employee?
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  @@map("addresses")
+}
+
+model Employee {
+  id           String     @id @default(uuid())
+  assigment    Assignment @relation(fields: [assignmentId], references: [id])
+  assignmentId String
+  status       Status     @default(active)
+  name         String     @db.VarChar(120)
+  cpf          String     @unique @db.VarChar(11)
+  birthdate    DateTime
+  phoneNumber  String     @map("phone_number") @db.VarChar(11)
+  email        String     @unique @db.VarChar(256)
+  password     String
+  address      Address    @relation(fields: [addressid], references: [id])
+  addressid    String     @unique @map("address_id")
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+
+  @@map("employees")
 }

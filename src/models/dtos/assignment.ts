@@ -2,7 +2,6 @@ import { AccountType } from "./accountType";
 import { PaymentMethod } from "./paymentMethod";
 import { GenericStatus } from "./status";
 
-
 export interface AssignmentDTO {
     id: string;
     name: string;
