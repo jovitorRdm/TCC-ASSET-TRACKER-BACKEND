@@ -78,7 +78,7 @@ model Address {
 
 model Employee {
   id           String     @id @default(uuid())
-  assigment    Assignment @relation(fields: [assignmentId], references: [id])
+  assignment   Assignment @relation(fields: [assignmentId], references: [id])
   assignmentId String
   status       Status     @default(active)
   name         String     @db.VarChar(120)

@@ -14,7 +14,7 @@ export class EventRepository implements IRepository {
     });
 
     if (existingEvent) {
-      throw new AppError(ErrorMessages.alreadyExists);
+      throw new AppError(ErrorMessages.MSGE02);
     }
 
     const event = new EventType(name, description);
@@ -53,7 +53,7 @@ export class EventRepository implements IRepository {
         });
 
         if (existingEvent) {
-          throw new AppError(ErrorMessages.alreadyExists);
+          throw new AppError(ErrorMessages.MSGE02);
         }
       }
 
@@ -70,7 +70,7 @@ export class EventRepository implements IRepository {
     } catch (e) {
       if (e instanceof AppError) throw e;
 
-      throw new AppError(ErrorMessages.notFound, 404);
+      throw new AppError(ErrorMessages.MSGE16, 404);
     }
   }
   async findAll(args: FindAllArgs) {
@@ -108,4 +108,6 @@ export class EventRepository implements IRepository {
       totalItems,
     };
   }
+
+  
 }

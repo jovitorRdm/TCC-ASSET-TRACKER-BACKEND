@@ -1,5 +1,5 @@
 export interface AddressDTO {
-    id: number;
+    id: string;
     street: string;
     number: string;
     neighborhood: string;
@@ -13,7 +13,7 @@ export interface AddressDTO {
   
 
   export interface UpdateAddressDTO {
-    id?: number;
+    id?: string;
     street?: string;
     number?: string;
     neighborhood?: string;

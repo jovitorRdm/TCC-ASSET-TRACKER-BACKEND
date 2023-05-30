@@ -19,7 +19,7 @@ export class AssignmentRepository implements IRepository {
     })
 
     if (AssignmentEvent) {
-      throw new AppError(ErrorMessages.alreadyExists);
+      throw new AppError(ErrorMessages.MSGE02);
     }
 
     const assignment = new Assignment(name, description, paymentMethod, paymentValue, accountRequirement, accountType);
@@ -70,7 +70,7 @@ export class AssignmentRepository implements IRepository {
         });
 
         if (existingAssignment) {
-          throw new AppError(ErrorMessages.alreadyExists);
+          throw new AppError(ErrorMessages.MSGE02);
         }
       }
 
@@ -93,7 +93,7 @@ export class AssignmentRepository implements IRepository {
     } catch (e) {
       if (e instanceof AppError) throw e;
 
-      throw new AppError(ErrorMessages.notFound, 404);
+      throw new AppError(ErrorMessages.MSGE07, 404);
     }
   }
   
