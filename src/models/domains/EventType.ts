@@ -20,14 +20,14 @@ export class EventType {
     }
 
     get id() {
-        return this._id;
+        return this._id!;
     }
 
     get status() {
         return this._status!;
     }
 
-    set guid(id: string) {
+    set id(id: string) {
         this._id = id;
     }
 
@@ -61,11 +61,11 @@ export class EventType {
                         new AppError(`'${this._status}' não é um status válido`),
                 }),
                 name: z
-                    .string({ required_error: ErrorMessages.requiredFields })
+                    .string({ required_error: ErrorMessages.MSGE07 })
                     .min(3, 'Nome deve conter pelo menos 3 caracteres')
                     .max(120, 'Nome não deve ser maior que 120 caracteres'),
                 description: z
-                    .string({ required_error: ErrorMessages.requiredFields })
+                    .string({ required_error: ErrorMessages.MSGE08 })
                     .min(3, 'a descrição deve conter pelo menos 3 caracteres')
                     .max(500, 'a descrição não deve ser maior que 500 caracteres'),
             })

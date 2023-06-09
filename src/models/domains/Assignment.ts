@@ -19,7 +19,7 @@ export class Assignment {
 // ----------------GET-----------------
 
     get id() {
-        return this._id;
+        return this._id!;
     }
 
     get name() {
@@ -53,7 +53,7 @@ export class Assignment {
 
 // ---------------SET--------------------
 
-    set guid(id: string) {
+    set id(id: string) {
         this._id = id;
     }
 
@@ -115,15 +115,15 @@ export class Assignment {
                         new AppError(`'${this._accountType}' não é um tipo de conta válida`),
                 }),
                 name: z
-                    .string({ required_error: ErrorMessages.requiredFields })
+                    .string({ required_error: ErrorMessages.MSGE08 })
                     .min(3, 'Nome deve conter pelo menos 3 caracteres')
                     .max(120, 'Nome não deve ser maior que 120 caracteres'),
                 description: z
-                    .string({ required_error: ErrorMessages.requiredFields })
+                    .string({ required_error: ErrorMessages.MSGE08 })
                     .min(3, 'a descrição deve conter pelo menos 3 caracteres')
                     .max(500, 'a descrição não deve ser maior que 500 caracteres'),
                 paymentValue: z
-                    .number({ required_error: ErrorMessages.requiredFields })
+                    .number({ required_error: ErrorMessages.MSGE08 })
                     .gt(0, 'Valor deve ser maior que 0'),
             })
             .partial({ id: true, status: true, accountType: !this._accountRequirement? true : undefined });

@@ -4,6 +4,7 @@ import 'express-async-errors';
 import { AppError } from '../http/errors/AppError';
 import { router } from './routes';
 import cors from "cors"
+import { ErrorMessages } from './errors';
 
 const app = express(); 
 
@@ -22,7 +23,7 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
     }
 
     return res.status(500).json({
-        message: `Internal server error - ${err.message}`,
+        message: `${ErrorMessages.MSGE03} - ${err.message}`,
     });
 });
 

@@ -2,15 +2,12 @@ import { parseArrayOfData } from "../../helpers/utils";
 import { excludeFields } from "../../helpers/utils/excludeFields";
 import { AppError, ErrorMessages } from "../../infra/http/errors";
 import { prismaClient } from "../../infra/prisma";
-import { FindAllArgs, FindAllReturn, IRepository } from "../../interfaces";
+import { FindAllArgs, IRepository } from "../../interfaces";
 import { Assignment } from "../domains";
 import { AccountType, CreateAssignmentDTO, GenericStatus, PaymentMethod, UpdateAssignmentDTO } from "../dtos";
 
-
-
 export class AssignmentRepository implements IRepository {
 
-  
   async create({ name, description, paymentMethod, paymentValue, accountRequirement, accountType }: CreateAssignmentDTO) {
     const AssignmentEvent = await prismaClient.assignment.findFirst({
       where: {
@@ -51,7 +48,7 @@ export class AssignmentRepository implements IRepository {
         assignmentToUpdate.paymentMethod as PaymentMethod,
         assignmentToUpdate.paymentValue,
         assignmentToUpdate.accountRequirement,
-        assignmentToUpdate.accountType as AccountType,
+        assignmentToUpdate.accountType === null ? undefined : assignmentToUpdate.accountType as AccountType,
       );
 
       if (data.name !== undefined) assignment.name = data.name;
@@ -93,7 +90,7 @@ export class AssignmentRepository implements IRepository {
     } catch (e) {
       if (e instanceof AppError) throw e;
 
-      throw new AppError(ErrorMessages.MSGE07, 404);
+      throw new AppError(ErrorMessages.MSGE05, 404);
     }
   }
   
@@ -127,10 +124,21 @@ export class AssignmentRepository implements IRepository {
       skip: args?.skip,
       take: args?.take,
     });
+    
 
     return {
       data: parseArrayOfData(data, ['createdAt', 'updatedAt']),
       totalItems,
     };
+  }
+
+  async checkAssociatedEmployees(assignmentId: string){
+    const count = await prismaClient.employee.count({
+      where: {
+        assignmentId: assignmentId,
+      },
+    });
+
+    return count > 0;
   }
 }

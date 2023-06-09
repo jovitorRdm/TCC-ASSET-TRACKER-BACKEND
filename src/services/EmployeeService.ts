@@ -1,8 +1,8 @@
-import { IService } from "../interfaces";
-import { CreateEmployeeDTO, UpdateEmployeeDTO } from "../models/dtos";
+import { FindAllArgs, IService } from "../interfaces";
+import { CreateEmployeeDTO, GenericStatus, UpdateEmployeeDTO } from "../models/dtos";
 import { EmployeeRepository } from "../models/repositories/EmployeeRepository";
 
-export class EmployeeService  {
+export class EmployeeService implements IService{
     private employeeRepository = new EmployeeRepository();
 
     async create(data: CreateEmployeeDTO) {
@@ -17,16 +17,16 @@ export class EmployeeService  {
         return updatedEmployee;
     }
 
-    // async changeStatus(id: string, status: GenericStatus) {
-    //     const updatedAssignment = await this.assignmentRepository.update(id, { status });
+    async changeStatus(id: string, status: GenericStatus) {
+        const updatedEmployee = await this.employeeRepository.update(id, { status });
 
-    //     return updatedAssignment;
-    // }
+        return updatedEmployee;
+    }
 
-    // async list(args: FindAllArgs = {}) {
-    //     const result = await this.assignmentRepository.findAll(args);
+    async list(args: FindAllArgs = {}) {
+        const result = await this.employeeRepository.findAll(args);
 
-    //     return result;
-    // }
+        return result;
+    }
 
 }

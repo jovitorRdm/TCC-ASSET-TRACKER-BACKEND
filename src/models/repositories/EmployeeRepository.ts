@@ -1,18 +1,17 @@
 import bcrypt from 'bcrypt';
-import { PrismaClient } from "@prisma/client";
 import { AppError, ErrorMessages } from "../../infra/http/errors";
-import { FindAllArgs, FindAllReturn, IRepository } from "../../interfaces/IRepository";
+import { FindAllArgs, IRepository } from "../../interfaces/IRepository";
 import { Address } from "../domains/Address";
-import { AddressDTO, AssignmentDTO, CreateEmployeeDTO, GenericStatus, UpdateAssignmentDTO, UpdateEmployeeDTO } from "../dtos";
+import { CreateEmployeeDTO, GenericStatus, UpdateEmployeeDTO } from "../dtos";
 import { prismaClient } from "../../infra/prisma";
 import { Employee } from "../domains/Employee";
 import { generatePassword } from "../../helpers/utils/generatePassword";
-import { Assignment } from "../domains";
 import { excludeFields } from '../../helpers/utils/excludeFields';
+import { Assignment } from '../domains';
 
 
 
-export class EmployeeRepository {
+export class EmployeeRepository implements IRepository{
     async create({
         address: addressData,
         birthdate,
@@ -67,7 +66,7 @@ export class EmployeeRepository {
             password: hashPassword,
             assignment: {
               connect: {
-                id: employee.assignmentId,
+                id: assignmentId,
               },
             },
             address: {
@@ -83,6 +82,7 @@ export class EmployeeRepository {
           },
           include: {
             address: true,
+            assignment:true,
           },
         });
 
@@ -106,7 +106,7 @@ export class EmployeeRepository {
       });
 
       if (!employeeToUpdate) {
-        throw new AppError(ErrorMessages.MSGE02, 404);
+        throw new AppError(ErrorMessages.MSGE05, 404);
       }
 
       const address = new Address(
@@ -120,7 +120,7 @@ export class EmployeeRepository {
       );
 
       if(data.address){
-        address.setAll(data.address as AddressDTO);
+        address.setAll(data.address);
         address.validate();
       }
 
@@ -142,7 +142,6 @@ export class EmployeeRepository {
       if (data.birthdate !== undefined) employee.birthdate = data.birthdate;
       if (data.phoneNumber !== undefined) employee.phoneNumber = data.phoneNumber;
       if (data.email !== undefined) employee.email = data.email;
-      if (data.password !== undefined) employee.password = data.password;
       if (data.status !== undefined) employee.status = data.status;
       if (data.assignmentId !== undefined) employee.assignmentId = data.assignmentId;
 
@@ -168,11 +167,7 @@ export class EmployeeRepository {
         }
       }
 
-      let hashPassword: string = '';
-
-      if (employee.password !== employeeToUpdate.password) {
-        hashPassword = await bcrypt.hash(employee.password, 8);
-      }
+      
       
       const updatedEmployee = await prismaClient.employee.update({
         where: { id },
@@ -183,17 +178,23 @@ export class EmployeeRepository {
           birthdate: employee.birthdate,
           phoneNumber: employee.phoneNumber,
           email: employee.email,
-          password: hashPassword,
+          password: employee.password,
+          assignment: employee.assignmentId !== employeeToUpdate.assignmentId ? {
+            connect:{
+              id:employee.assignmentId
+            }
+          }:undefined,
           address: {
             update: {
               ...address.toJSON(),
             },
-          },
+          },  
         },
         include: {
           address: true,
+          assignment:true,
         },
-      })      
+      });      
 
     const dataToReturn = {
       ...excludeFields(updatedEmployee, [
@@ -202,12 +203,78 @@ export class EmployeeRepository {
         'password',
         'addressid',
       ]),
-      address: excludeFields(updatedEmployee.address, [
-        'createdAt',
-        'updatedAt',
-      ]),
     }  
     return dataToReturn;
+  }
+
+  async findAll(args?: FindAllArgs) {
+    const where = {
+      NOT: args?.itemsToExclude
+        ? { id: { in: args?.itemsToExclude } }
+        : undefined,
+      OR: args?.searchTerm
+        ? [
+            {
+              name: {
+                contains: args?.searchTerm,
+              },
+            },
+            {
+              cpf: {
+                contains: args?.searchTerm,
+              },
+            },
+            {
+              email: {
+                contains: args?.searchTerm,
+              },
+            },
+          ]
+        : undefined,
+      status: {
+        equals: args?.filterByStatus,
+      },
+    };
+
+    const totalItems = await prismaClient.employee.count({
+      where,
+    });
+      const data = await prismaClient.employee.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      skip: args?.skip,
+      take: args?.take,
+      include: {
+        address: true,
+        assignment: true,
+      },
+    });
+
+    const dataToUse = data.map((employee) => ({
+      ...excludeFields(employee, [
+        'createdAt',
+        'updatedAt',
+        'password',
+        'addressid',
+      ]),
+    }));
+
+    return {
+      data: dataToUse,
+      totalItems,
+    };
+  }
+
+  async findById(id: string) {
+    try {
+      const employee = await prismaClient.employee.findUniqueOrThrow({
+        where: { id },
+      });
+
+      return { ...employee};
+    } catch {
+      throw new AppError(ErrorMessages.MSGE02);
+    }
   }
      
 }

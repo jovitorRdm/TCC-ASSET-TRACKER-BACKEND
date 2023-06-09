@@ -70,7 +70,7 @@ export class EventRepository implements IRepository {
     } catch (e) {
       if (e instanceof AppError) throw e;
 
-      throw new AppError(ErrorMessages.MSGE16, 404);
+      throw new AppError(ErrorMessages.MSGE05, 404);
     }
   }
   async findAll(args: FindAllArgs) {

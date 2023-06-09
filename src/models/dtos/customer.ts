@@ -1,24 +1,21 @@
-import { Assignment } from "../domains";
 import { AddressDTO, CreateAddressDTO, UpdateAddressDTO } from "./address";
 import { GenericStatus } from "./status";
 
-export interface CreateEmployeeDTO {   
+export interface CreateCustomerDTO {   
     name: string;
     cpf: string;
     email: string;
     address: CreateAddressDTO;
     birthdate: string;
     phoneNumber: string;
-    assignmentId: string;
   }
   
-  export interface EmployeeDTO extends CreateEmployeeDTO {
+  export interface CustomerDTO extends CreateCustomerDTO {
     id: string;
     status: GenericStatus;
-    assignmentId: string;
   }
   
-  export interface UpdateEmployeeDTO {
+  export interface UpdateCustomerDTO {
     id?: string;
     status?: GenericStatus;
     name?: string;

@@ -71,7 +71,7 @@ export class Address {
 
   toJSON() {
     return {
-      guid: this.id,
+      id: this.id,
       street: this.street,
       number: this.number,
       neighborhood: this.neighborhood,
@@ -94,10 +94,10 @@ export class Address {
   validate() {
     const addressSchema = z
       .object({
-        guid: z.string().uuid(),
+        id: z.string().uuid(),
        
       })
-      .partial({ guid: true });
+      .partial({ id: true });
 
     try {
       addressSchema.parse(this);

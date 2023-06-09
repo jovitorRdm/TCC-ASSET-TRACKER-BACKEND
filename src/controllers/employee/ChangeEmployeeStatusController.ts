@@ -1,20 +1,15 @@
 import { Request, Response } from "express";
-import { AppError, ErrorMessages } from "../../infra/http/errors";
-import { AssignmentService } from "../../services";
+import { AssignmentService, EmployeeService } from "../../services";
 
-export class ChangeAssignmentStatusController {
+export class ChangeEmployeeStatusController {
     async handle(req: Request, res: Response) {
         const { id } = req.params;
         const { status } = req.body;
 
-        const assignmentService = new AssignmentService();
+        const employeeService = new EmployeeService();
 
-        if (status === undefined) {
-            throw new AppError(ErrorMessages.invalidData);
-        }
+        const employee = await employeeService.changeStatus(id, status);
 
-        const assignment = await assignmentService.changeStatus(id, status);
-
-        return res.json(assignment);
+        return res.json(employee);
     }
 }

@@ -4,7 +4,7 @@ import { AppError, ErrorMessages } from "../../infra/http/errors";
 import { AddressDTO, CreateAddressDTO, GenericStatus } from "../dtos";
 
 
-export class Employee {
+export class Customer {
   constructor(
     private _name: string,
     private _cpf: string,
@@ -13,7 +13,6 @@ export class Employee {
     private _email: string,
     private _password: string,
     private _address: CreateAddressDTO | AddressDTO,
-    private _assignmentId: string,
     private _status?: GenericStatus,
     private _id?: string
   ) {}
@@ -46,10 +45,6 @@ export class Employee {
 
     get status() {
         return this._status!;
-    }
-
-    get assignmentId() {
-        return this._assignmentId;
     }
 
     set id(id: string) {
@@ -88,12 +83,8 @@ export class Employee {
         this._status = status;
     }
 
-    set assignmentId(assignmentId: string) {
-        this._assignmentId = assignmentId;
-    }
-
     validate() {
-        const employeeSchema = z
+        const customerSchema = z
           .object({
             id: z.string().uuid('id inválido'),
             status: z.enum([GenericStatus.active, GenericStatus.inactive], {
@@ -125,7 +116,7 @@ export class Employee {
           .partial({ id: true, status: true });
     
         try {
-          employeeSchema.parse(this);
+          customerSchema.parse(this);
         } catch (err) {
           throw new AppError(err.issues[0].message);
         }

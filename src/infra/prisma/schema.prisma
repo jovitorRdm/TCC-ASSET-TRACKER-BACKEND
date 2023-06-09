@@ -72,6 +72,7 @@ model Address {
   employee     Employee?
   createdAt    DateTime  @default(now()) @map("created_at")
   updatedAt    DateTime  @updatedAt @map("updated_at")
+  Customer     Customer?
 
   @@map("addresses")
 }
@@ -93,4 +94,21 @@ model Employee {
   updatedAt    DateTime   @updatedAt @map("updated_at")
 
   @@map("employees")
+}
+
+model Customer {
+  id          String   @id @default(uuid())
+  status      Status   @default(active)
+  name        String   @db.VarChar(120)
+  cpf         String   @unique @db.VarChar(11)
+  birthdate   DateTime
+  phoneNumber String   @map("phone_number") @db.VarChar(11)
+  email       String   @unique @db.VarChar(256)
+  password    String
+  address     Address  @relation(fields: [addressid], references: [id])
+  addressid   String   @unique @map("address_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("costumer")
 }
