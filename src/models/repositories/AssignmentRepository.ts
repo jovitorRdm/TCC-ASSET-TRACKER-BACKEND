@@ -139,6 +139,16 @@ export class AssignmentRepository implements IRepository {
       },
     });
 
-    return count > 0;
+    const count2 = await prismaClient.service.count({
+      where: {
+        assignments: {
+          some: {
+            id: assignmentId,
+          },
+        }
+      },
+    })
+
+    return count > 0 || count2 > 0;
   }
 }

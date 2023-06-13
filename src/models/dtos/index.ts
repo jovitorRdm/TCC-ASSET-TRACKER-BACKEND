@@ -6,3 +6,4 @@ export * from './accountType';
 export * from './employee';
 export * from './address';
 export * from './customer';
+export * from './service';

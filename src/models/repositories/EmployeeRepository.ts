@@ -7,8 +7,6 @@ import { prismaClient } from "../../infra/prisma";
 import { Employee } from "../domains/Employee";
 import { generatePassword } from "../../helpers/utils/generatePassword";
 import { excludeFields } from '../../helpers/utils/excludeFields';
-import { Assignment } from '../domains';
-
 
 
 export class EmployeeRepository implements IRepository{
@@ -276,5 +274,4 @@ export class EmployeeRepository implements IRepository{
       throw new AppError(ErrorMessages.MSGE02);
     }
   }
-     
 }
