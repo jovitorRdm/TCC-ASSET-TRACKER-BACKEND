@@ -9,10 +9,6 @@ export class ChangeEventStatusController {
 
         const eventService = new EventService();
 
-        if (status === undefined) {
-            throw new AppError(ErrorMessages.invalidData);
-        }
-
         const event = await eventService.changeStatus(id, status);
 
         return res.json(event);

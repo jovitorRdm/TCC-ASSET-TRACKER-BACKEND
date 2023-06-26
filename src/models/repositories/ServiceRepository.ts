@@ -3,7 +3,6 @@ import { excludeFields } from "../../helpers/utils/excludeFields";
 import { AppError, ErrorMessages } from "../../infra/http/errors";
 import { prismaClient } from "../../infra/prisma";
 import { FindAllArgs, FindAllReturn, IRepository } from "../../interfaces";
-import { Assignment } from "../domains";
 import { Service } from "../domains/Service";
 import { AssignmentDTO, GenericStatus, UpdateServiceDTO } from "../dtos";
 

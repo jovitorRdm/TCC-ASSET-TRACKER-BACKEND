@@ -5,6 +5,7 @@ import { assignmentRoutes } from './assignment.routes';
 import { employeeRoutes } from './employee.routes';
 import { customerRoutes } from './customer.routes';
 import { ServiceRoutes } from './service.routes';
+import { ProductRoutes } from './product.routes';
 
 const router = Router();
 
@@ -15,5 +16,6 @@ router.use('/assignment', assignmentRoutes);
 router.use('/employee', employeeRoutes);
 router.use('/customer', customerRoutes);
 router.use('/serviceItem', ServiceRoutes);
+router.use('/product',ProductRoutes);
 
 export { router };

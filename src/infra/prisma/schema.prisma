@@ -48,6 +48,7 @@ model Assignment {
   updatedAt          DateTime      @updatedAt @map("updated_at")
   Employee           Employee[]
   services           Service[]
+  Product            Product[]
 
   @@map("assignment")
 }
@@ -124,4 +125,18 @@ model Service {
   updatedAt   DateTime     @updatedAt @map("updated_at")
 
   @@map("service")
+}
+
+model Product {
+  id              String       @id @default(uuid())
+  name            String       @unique @db.VarChar(120)
+  description     String?      @db.VarChar(500)
+  productValue    Float
+  productQuantity Int
+  status          Status       @default(active)
+  assignments     Assignment[]
+  createdAt       DateTime     @default(now()) @map("created_at")
+  updatedAt       DateTime     @updatedAt @map("updated_at")
+
+  @@map("product")
 }

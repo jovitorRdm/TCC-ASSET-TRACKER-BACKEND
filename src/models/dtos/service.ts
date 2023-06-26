@@ -1,4 +1,3 @@
-import { AssignmentDTO } from "./assignment";
 import { GenericStatus } from "./status";
 
 export interface CreateServiceDTO {
