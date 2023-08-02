@@ -4,7 +4,7 @@ import { GenericStatus } from '../dtos';
 
 
 export class EventType {
-    constructor(
+    constructor( //O constructor é responsável por criar e inicializar os objetos dessa classe quando são instanciados 
         private _name: string,
         private _description?: string | null,
         private _id?: string,

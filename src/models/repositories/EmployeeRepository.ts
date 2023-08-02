@@ -7,6 +7,9 @@ import { prismaClient } from "../../infra/prisma";
 import { Employee } from "../domains/Employee";
 import { generatePassword } from "../../helpers/utils/generatePassword";
 import { excludeFields } from '../../helpers/utils/excludeFields';
+import { MailProvider } from '../../providers/mail/MailProvider';
+import { firstAccessEmailTemplate } from '../../providers/mail/templates/firstAccess';
+import { newPasswordEmailTemplate } from '../../providers/mail/templates/newPassword';
 
 
 export class EmployeeRepository implements IRepository{
@@ -54,6 +57,14 @@ export class EmployeeRepository implements IRepository{
           8
         );
 
+        const passwordMatch = await bcrypt.compare(
+          employee.password, hashPassword
+        )
+
+        if (!passwordMatch){
+          throw new AppError(ErrorMessages.MSGE13);
+        }
+
         const createdEmployee = await prismaClient.employee.create({
           data: {
             name: employee.name,
@@ -83,6 +94,20 @@ export class EmployeeRepository implements IRepository{
             assignment:true,
           },
         });
+
+        
+          const mailProvider = new MailProvider();
+    
+          await mailProvider.sendMail(
+            employee.email,
+            'Novos dados de acesso ao Asset Tracker',
+            firstAccessEmailTemplate(
+              employee.name,
+              employee.email,
+              employee.password
+            )
+          );
+        
 
         const dataToReturn = {
           ...excludeFields(createdEmployee, [
@@ -140,8 +165,8 @@ export class EmployeeRepository implements IRepository{
       if (data.birthdate !== undefined) employee.birthdate = data.birthdate;
       if (data.phoneNumber !== undefined) employee.phoneNumber = data.phoneNumber;
       if (data.email !== undefined) employee.email = data.email;
-      if (data.status !== undefined) employee.status = data.status;
       if (data.assignmentId !== undefined) employee.assignmentId = data.assignmentId;
+      if (data.status !== undefined) employee.status = data.status;
 
       employee.validate();
 
@@ -164,8 +189,6 @@ export class EmployeeRepository implements IRepository{
           throw new AppError(ErrorMessages.MSGE02);
         }
       }
-
-      
       
       const updatedEmployee = await prismaClient.employee.update({
         where: { id },
@@ -192,7 +215,21 @@ export class EmployeeRepository implements IRepository{
           address: true,
           assignment:true,
         },
-      });      
+      });    
+      
+      if (data.password) {
+        const mailProvider = new MailProvider();
+  
+        await mailProvider.sendMail(
+          employee.email,
+          'Novos dados de acesso ao Asset Tracker',
+          newPasswordEmailTemplate(
+            employee.name,
+            employee.email,
+            employee.password
+          )
+        );
+      }
 
     const dataToReturn = {
       ...excludeFields(updatedEmployee, [
@@ -202,6 +239,7 @@ export class EmployeeRepository implements IRepository{
         'addressid',
       ]),
     }  
+
     return dataToReturn;
   }
 
@@ -267,6 +305,9 @@ export class EmployeeRepository implements IRepository{
     try {
       const employee = await prismaClient.employee.findUniqueOrThrow({
         where: { id },
+        include: {
+          assignment: true,
+        }
       });
 
       return { ...employee};

@@ -9,17 +9,18 @@ import { AccountType, CreateAssignmentDTO, GenericStatus, PaymentMethod, UpdateA
 export class AssignmentRepository implements IRepository {
 
   async create({ name, description, paymentMethod, paymentValue, accountRequirement, accountType }: CreateAssignmentDTO) {
-    const AssignmentEvent = await prismaClient.assignment.findFirst({
+    const existingAssignment = await prismaClient.assignment.findFirst({
       where: {
         name
       }
     })
 
-    if (AssignmentEvent) {
+    if (existingAssignment) {
       throw new AppError(ErrorMessages.MSGE02);
     }
 
     const assignment = new Assignment(name, description, paymentMethod, paymentValue, accountRequirement, accountType);
+
     assignment.validate();
 
     const createAssignmentData: any = {

@@ -5,30 +5,31 @@ import { prismaClient } from "../../infra/prisma";
 import { FindAllArgs, FindAllReturn, IRepository } from "../../interfaces";
 import { EventType } from "../domains/EventType";
 import { GenericStatus } from "../dtos";
-import { UpdateEventDTO } from "../dtos/events";
+import { CreateEventDTO, UpdateEventDTO } from "../dtos/events";
 
 export class EventRepository implements IRepository {
-  async create({ name, description }) {
+  async create({ name, description }: CreateEventDTO) {
     const existingEvent = await prismaClient.eventType.findUnique({
       where: { name }
-    });
+    }); // valida se o evento já existe
 
     if (existingEvent) {
       throw new AppError(ErrorMessages.MSGE02);
-    }
+    } // caso exista o evento, retorna um erro
 
-    const event = new EventType(name, description);
+    const event = new EventType(name, description); // cria um novo objeto de tipo EventType
 
-    event.validate();
+    event.validate(); // valida o objeto
 
     const createEvent = await prismaClient.eventType.create({
       data: {
         name: event.name,
         description: event.description,
       }
-    });
+    }); // cria o evento no banco
 
-    return excludeFields(createEvent, ['createdAt', 'updatedAt'])
+    return excludeFields(createEvent, ['createdAt', 'updatedAt']);
+    // retorna os dados do evento que foi criado no banco de dados 
   }
   async update(id: string, data: UpdateEventDTO) {
     try {
@@ -73,6 +74,8 @@ export class EventRepository implements IRepository {
       throw new AppError(ErrorMessages.MSGE05, 404);
     }
   }
+
+  
   async findAll(args: FindAllArgs) {
     const where = {
       OR: args.searchTerm

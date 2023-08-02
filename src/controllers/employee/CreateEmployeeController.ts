@@ -1,6 +1,4 @@
 import { Request, Response } from "express";
-import { CreateAssignmentDTO} from "../../models/dtos/assignment";
-import { AssignmentService } from "../../services/AssignmentService";
 import { EmployeeService } from "../../services/EmployeeService";
 import { CreateEmployeeDTO } from "../../models/dtos";
 

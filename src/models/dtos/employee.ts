@@ -1,4 +1,5 @@
 import { Assignment } from "../domains";
+import { AccountType } from "./accountType";
 import { AddressDTO, CreateAddressDTO, UpdateAddressDTO } from "./address";
 import { GenericStatus } from "./status";
 
@@ -8,6 +9,7 @@ export interface CreateEmployeeDTO {
     email: string;
     address: CreateAddressDTO;
     birthdate: string;
+    accontType: AccountType[];
     phoneNumber: string;
     assignmentId: string;
   }
@@ -26,7 +28,9 @@ export interface CreateEmployeeDTO {
     email?: string;
     address?: AddressDTO;
     birthdate?: string;
+    accontType?: AccountType[];
     phoneNumber?: string;
     assignmentId?: string;
+    password?: string;
   }
   
