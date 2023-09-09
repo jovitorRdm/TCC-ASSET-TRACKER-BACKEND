@@ -14,6 +14,15 @@ enum PaymentMethod {
   peopleQuantity
 }
 
+enum MeasurementUnit {
+  UNIT
+  PACKAGE
+  KILOGRAM
+  LITER
+  METER
+  CENTIMETER
+}
+
 enum AccountType {
   EventAdministrator
   Receptionist
@@ -48,7 +57,8 @@ model Assignment {
   updatedAt          DateTime      @updatedAt @map("updated_at")
   Employee           Employee[]
   services           Service[]
-  Product            Product[]
+  Product            Product?      @relation(fields: [productId], references: [id])
+  productId          String?
 
   @@map("assignment")
 }
@@ -64,41 +74,22 @@ model Account {
 }
 
 model Address {
-  id           String    @id @default(uuid())
-  cep          String    @db.VarChar(8)
-  city         String    @db.VarChar(120)
-  state        String    @db.VarChar(2)
-  neighborhood String    @db.VarChar(120)
-  street       String    @db.VarChar(120)
-  number       String    @db.VarChar(10)
-  employee     Employee?
-  createdAt    DateTime  @default(now()) @map("created_at")
-  updatedAt    DateTime  @updatedAt @map("updated_at")
-  Customer     Customer?
+  id           String   @id @default(uuid())
+  cep          String   @db.VarChar(8)
+  city         String   @db.VarChar(120)
+  state        String   @db.VarChar(2)
+  neighborhood String   @db.VarChar(120)
+  street       String   @db.VarChar(120)
+  number       String   @db.VarChar(10)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  Person       Person?
 
   @@map("addresses")
 }
 
-model Employee {
-  id           String     @id @default(uuid())
-  assignment   Assignment @relation(fields: [assignmentId], references: [id])
-  assignmentId String
-  status       Status     @default(active)
-  name         String     @db.VarChar(120)
-  cpf          String     @unique @db.VarChar(11)
-  birthdate    DateTime
-  phoneNumber  String     @map("phone_number") @db.VarChar(11)
-  email        String     @unique @db.VarChar(256)
-  password     String
-  address      Address    @relation(fields: [addressid], references: [id])
-  addressid    String     @unique @map("address_id")
-  createdAt    DateTime   @default(now()) @map("created_at")
-  updatedAt    DateTime   @updatedAt @map("updated_at")
-
-  @@map("employees")
-}
-
-model Customer {
+// PESSOA
+model Person {
   id          String   @id @default(uuid())
   status      Status   @default(active)
   name        String   @db.VarChar(120)
@@ -109,10 +100,52 @@ model Customer {
   password    String
   address     Address  @relation(fields: [addressid], references: [id])
   addressid   String   @unique @map("address_id")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  Customer  Customer?
+  Employee  Employee?
+  Supplier  Supplier?
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  @@map("person")
+}
+
+// CLIENTE
+model Customer {
+  id       String @id @default(uuid())
+  status   Status @default(active)
+  personid String @unique
+  person   Person @relation(fields: [personid], references: [id])
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("costumer")
+}
+
+// COLABORADOR
+model Employee {
+  id           String     @id @default(uuid())
+  status       Status     @default(active)
+  personid     String     @unique
+  person       Person     @relation(fields: [personid], references: [id])
+  assignmentId String
+  assignment   Assignment @relation(fields: [assignmentId], references: [id])
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+
+  @@map("employees")
+}
+
+model Supplier {
+  id        String   @id @default(uuid())
+  status    Status   @default(active)
+  personid  String   @unique
+  person    Person   @relation(fields: [personid], references: [id])
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("supplier")
 }
 
 model Service {
@@ -128,15 +161,16 @@ model Service {
 }
 
 model Product {
-  id              String       @id @default(uuid())
-  name            String       @unique @db.VarChar(120)
-  description     String?      @db.VarChar(500)
-  productValue    Float
-  productQuantity Int
-  status          Status       @default(active)
-  assignments     Assignment[]
-  createdAt       DateTime     @default(now()) @map("created_at")
-  updatedAt       DateTime     @updatedAt @map("updated_at")
+  id          String  @id @default(uuid())
+  name        String  @unique @db.VarChar(120)
+  description String? @db.VarChar(500)
+  quantity    Int
+  value       Float
+
+  status      Status       @default(active)
+  assignments Assignment[]
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
 
   @@map("product")
 }

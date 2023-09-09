@@ -14,9 +14,12 @@ export class AuthenticationEmployeeService {
         
         const user = await prismaClient.employee.findFirst({
             where: {
-                email,
+                person: {
+                    email,
+                },
             },
             include: {
+                person: true,
                 assignment: {
                     select: {
                         accountType: true,
@@ -29,7 +32,7 @@ export class AuthenticationEmployeeService {
             throw new AppError(ErrorMessages.MSGE13);
         }
 
-        const passwordMatch = await compare(password, user.password);
+        const passwordMatch = await compare(password, user.person.password);
 
         if(!passwordMatch){
             throw new AppError(ErrorMessages.MSGE13);

@@ -2,7 +2,6 @@ import bcrypt from 'bcrypt';
 import { AppError, ErrorMessages } from "../../infra/http/errors";
 import { FindAllArgs, IRepository } from "../../interfaces/IRepository";
 import { Address } from "../domains/Address";
-import { CreateEmployeeDTO, GenericStatus, UpdateEmployeeDTO } from "../dtos";
 import { prismaClient } from "../../infra/prisma";
 import { Employee } from "../domains/Employee";
 import { generatePassword } from "../../helpers/utils/generatePassword";
@@ -10,19 +9,20 @@ import { excludeFields } from '../../helpers/utils/excludeFields';
 import { MailProvider } from '../../providers/mail/MailProvider';
 import { firstAccessEmailTemplate } from '../../providers/mail/templates/firstAccess';
 import { newPasswordEmailTemplate } from '../../providers/mail/templates/newPassword';
+import { CreatedEmployeeDTO, GenericStatus, UpdateEmployeeDTO } from '../dtos';
 
 
 export class EmployeeRepository implements IRepository{
     async create({
+        name,
+        cpf,
         address: addressData,
         birthdate,
-        cpf,
-        email,
-        name,
         phoneNumber,
+        email,
         assignmentId
-      }: CreateEmployeeDTO) {
-        const existingEmployee = await prismaClient.employee.findFirst({
+      }: CreatedEmployeeDTO) {
+        const existingEmployee = await prismaClient.person.findFirst({
           where: { OR: [{ cpf }, { email }] },
         });
     
@@ -42,6 +42,7 @@ export class EmployeeRepository implements IRepository{
         address.validate();
 
         const employee = new Employee(
+          assignmentId,
           name, 
           cpf, 
           birthdate,
@@ -49,7 +50,6 @@ export class EmployeeRepository implements IRepository{
           email,
           generatePassword(),
           address.toJSON(),
-          assignmentId,
         )
 
         const hashPassword = await bcrypt.hash(
@@ -67,31 +67,32 @@ export class EmployeeRepository implements IRepository{
 
         const createdEmployee = await prismaClient.employee.create({
           data: {
-            name: employee.name,
-            cpf: employee.cpf,
-            birthdate: employee.birthdate,
-            phoneNumber: employee.phoneNumber,
-            email: employee.email,
-            password: hashPassword,
+            person: {
+              create: {
+                name,
+                cpf,
+                birthdate,
+                phoneNumber,
+                email,
+                password: hashPassword,
+                address: {
+                  create: address.toJSON(),
+                },
+              },
+            },
             assignment: {
               connect: {
                 id: assignmentId,
               },
             },
-            address: {
-              create: {
-                street: employee.address.street,
-                number: employee.address.number,
-                neighborhood: employee.address.neighborhood,
-                city: employee.address.city,
-                state: employee.address.state,
-                cep: employee.address.cep,
-              },
-            },
           },
           include: {
-            address: true,
-            assignment:true,
+            person: {
+              include: {
+                address: true,
+              },
+            },
+            assignment: true,
           },
         });
 
@@ -110,7 +111,7 @@ export class EmployeeRepository implements IRepository{
         
 
         const dataToReturn = {
-          ...excludeFields(createdEmployee, [
+          ...excludeFields({...createdEmployee.person, id: createdEmployee.id, assignment: createdEmployee.assignment}, [
             'createdAt',
             'updatedAt',
             'password',
@@ -124,7 +125,11 @@ export class EmployeeRepository implements IRepository{
       const employeeToUpdate = await prismaClient.employee.findUnique({
         where: { id },
         include: {
-          address: true,
+          person: {
+            include: {
+              address: true,
+            }
+          }
         },
       });
 
@@ -133,13 +138,13 @@ export class EmployeeRepository implements IRepository{
       }
 
       const address = new Address(
-        employeeToUpdate.address.street,
-        employeeToUpdate.address.number,
-        employeeToUpdate.address.neighborhood,
-        employeeToUpdate.address.city,
-        employeeToUpdate.address.state,
-        employeeToUpdate.address.cep,
-        employeeToUpdate.address.id
+        employeeToUpdate.person.address.street,
+        employeeToUpdate.person.address.number,
+        employeeToUpdate.person.address.neighborhood,
+        employeeToUpdate.person.address.city,
+        employeeToUpdate.person.address.state,
+        employeeToUpdate.person.address.cep,
+        employeeToUpdate.person.address.id
       );
 
       if(data.address){
@@ -148,15 +153,15 @@ export class EmployeeRepository implements IRepository{
       }
 
       const employee = new Employee(
-        employeeToUpdate.name,
-        employeeToUpdate.cpf,
-        employeeToUpdate.birthdate.toISOString(),
-        employeeToUpdate.phoneNumber,
-        employeeToUpdate.email,
-        employeeToUpdate.password,
-        address.toJSON(),
         employeeToUpdate.assignmentId,
-        employeeToUpdate.status as GenericStatus,
+        employeeToUpdate.person.name,
+        employeeToUpdate.person.cpf,
+        employeeToUpdate.person.birthdate.toISOString(),
+        employeeToUpdate.person.phoneNumber,
+        employeeToUpdate.person.email,
+        employeeToUpdate.person.password,
+        address.toJSON(),
+        employeeToUpdate.person.status as GenericStatus,
         employeeToUpdate.id
       );
 
@@ -170,8 +175,8 @@ export class EmployeeRepository implements IRepository{
 
       employee.validate();
 
-      if (employee.cpf !== employeeToUpdate.cpf) {
-        const existingEmployee = await prismaClient.employee.findFirst({
+      if (employee.cpf !== employeeToUpdate.person.cpf) {
+        const existingEmployee = await prismaClient.person.findFirst({
           where: { cpf: employee.cpf },
         });
   
@@ -180,8 +185,8 @@ export class EmployeeRepository implements IRepository{
         }
       }
   
-      if (employee.email !== employeeToUpdate.email) {
-        const existingEmployee = await prismaClient.employee.findFirst({
+      if (employee.email !== employeeToUpdate.person.email) {
+        const existingEmployee = await prismaClient.person.findFirst({
           where: { email: employee.email },
         });
   
@@ -193,26 +198,29 @@ export class EmployeeRepository implements IRepository{
       const updatedEmployee = await prismaClient.employee.update({
         where: { id },
         data: {
-          status: employee.status,
-          name: employee.name,
-          cpf: employee.cpf,
-          birthdate: employee.birthdate,
-          phoneNumber: employee.phoneNumber,
-          email: employee.email,
-          password: employee.password,
+          person: {
+            update: {
+              status: employee.status,
+              name: employee.name,
+              cpf: employee.cpf,
+              birthdate: employee.birthdate,
+              phoneNumber: employee.phoneNumber,
+              email: employee.email,
+              password: employee.password,
+            }
+          },
           assignment: employee.assignmentId !== employeeToUpdate.assignmentId ? {
             connect:{
               id:employee.assignmentId
             }
-          }:undefined,
-          address: {
-            update: {
-              ...address.toJSON(),
-            },
-          },  
+          }:undefined,  
         },
         include: {
-          address: true,
+          person: {
+            include: {
+              address: true,
+            }
+          },
           assignment:true,
         },
       });    
@@ -232,7 +240,7 @@ export class EmployeeRepository implements IRepository{
       }
 
     const dataToReturn = {
-      ...excludeFields(updatedEmployee, [
+      ...excludeFields({...updatedEmployee.person, id: updatedEmployee.id, assignment: updatedEmployee.assignment}, [
         'createdAt',
         'updatedAt',
         'password',
@@ -251,19 +259,25 @@ export class EmployeeRepository implements IRepository{
       OR: args?.searchTerm
         ? [
             {
-              name: {
+              person: {
+                name: {
                 contains: args?.searchTerm,
+                }
               },
             },
             {
+              person: {
               cpf: {
                 contains: args?.searchTerm,
               },
             },
+            },
             {
+              person: {
               email: {
                 contains: args?.searchTerm,
               },
+            },
             },
           ]
         : undefined,
@@ -281,13 +295,17 @@ export class EmployeeRepository implements IRepository{
       skip: args?.skip,
       take: args?.take,
       include: {
-        address: true,
+        person: {
+          include: {
+            address: true,
+          }
+        },
         assignment: true,
       },
     });
 
     const dataToUse = data.map((employee) => ({
-      ...excludeFields(employee, [
+      ...excludeFields({...employee.person, id: employee.id, assignment: employee.assignment}, [
         'createdAt',
         'updatedAt',
         'password',

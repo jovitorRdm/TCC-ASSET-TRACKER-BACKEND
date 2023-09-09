@@ -2,90 +2,37 @@ import { z } from "zod";
 import { validateCPF } from "../../helpers/validators";
 import { AppError, ErrorMessages } from "../../infra/http/errors";
 import { AddressDTO, CreateAddressDTO, GenericStatus } from "../dtos";
+import { Person } from "./Person";
 
 
-export class Employee {
+export class Employee extends Person {
   constructor(
-    private _name: string,
-    private _cpf: string,
-    private _birthdate: string,
-    private _phoneNumber: string,
-    private _email: string,
-    private _password: string,
-    private _address: CreateAddressDTO | AddressDTO,
     private _assignmentId: string,
-    private _status?: GenericStatus,
-    private _id?: string
-  ) {}
-
-    get id() {
-        return this._id!;
-    }
-    get name() {
-        return this._name;
-    }
-    get cpf() {
-        return this._cpf;
-    }
-    get birthdate() {
-        return this._birthdate;
-    }
-    get phoneNumber() {
-        return this._phoneNumber;
-    }
-    get email() {
-        return this._email;
-    }
-    get password() {
-        return this._password;
-    }
-
-    get address() {
-        return this._address;
-    }
-
-    get status() {
-        return this._status!;
-    }
+     _name: string,
+     _cpf: string,
+     _birthdate: string,
+     _phoneNumber: string,
+     _email: string,
+     _password: string,
+     _address: CreateAddressDTO | AddressDTO,
+     _status?: GenericStatus,
+     _id?: string
+  ) {
+    super(
+      _name,
+      _cpf,
+      _birthdate,
+      _phoneNumber,
+      _email,
+      _password,
+      _address,
+      _status,
+      _id
+    );
+  }
 
     get assignmentId() {
         return this._assignmentId;
-    }
-
-    set id(id: string) {
-        this._id = id;
-    }
-
-    set name(name: string) {
-        this._name = name;
-    }
-
-    set cpf(cpf: string) {
-        this._cpf = cpf;
-    }
-
-    set birthdate(birthdate: string) {
-        this._birthdate = birthdate;
-    }
-
-    set phoneNumber(phoneNumber: string) {
-        this._phoneNumber = phoneNumber;
-    }
-
-    set email(email: string) {
-        this._email = email;
-    }
-
-    set password(password: string) {
-        this._password = password;
-    }
-
-    set address(address: CreateAddressDTO | AddressDTO) {
-        this._address = address;
-    }
-
-    set status(status: GenericStatus) {
-        this._status = status;
     }
 
     set assignmentId(assignmentId: string) {

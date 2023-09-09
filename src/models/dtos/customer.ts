@@ -1,19 +1,21 @@
-import { AddressDTO, CreateAddressDTO, UpdateAddressDTO } from "./address";
+import { AddressDTO, CreateAddressDTO } from "./address";
 import { GenericStatus } from "./status";
 
-export interface CreateCustomerDTO {   
+export interface customerDTO {   
+    id: string;
+    status: GenericStatus;
     name: string;
     cpf: string;
     email: string;
     address: CreateAddressDTO;
     birthdate: string;
     phoneNumber: string;
+    password: string;
   }
   
-  export interface CustomerDTO extends CreateCustomerDTO {
-    id: string;
-    status: GenericStatus;
-  }
+  export interface CreateCustomerDTO 
+    extends Omit<customerDTO, 'id' > {}
+  
   
   export interface UpdateCustomerDTO {
     id?: string;
@@ -24,6 +26,6 @@ export interface CreateCustomerDTO {
     address?: AddressDTO;
     birthdate?: string;
     phoneNumber?: string;
-    assignmentId?: string;
+    password?: string;
   }
   

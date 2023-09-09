@@ -8,22 +8,24 @@ import { generatePassword } from "../../helpers/utils/generatePassword";
 import { excludeFields } from '../../helpers/utils/excludeFields';
 import { CreateCustomerDTO, UpdateCustomerDTO } from '../dtos/customer';
 import { Customer } from '../domains/Customer';
+import { CreatePersonDTO, UpdatePersonDTO } from '../dtos/person';
+import { Person } from '../domains/Person';
 
-export class CustomerRepository implements IRepository{
+export class CustomerRepository implements IRepository {
     async create({
-        address: addressData,
-        birthdate,
-        cpf,
-        email,
-        name,
-        phoneNumber,
-      }: CreateCustomerDTO) {
+          name,
+          cpf,
+          address: addressData,
+          birthdate,
+          phoneNumber,
+          email
+      }: CreatePersonDTO) {
 
-        const existingCustomer = await prismaClient.customer.findFirst({
+        const existingPerson = await prismaClient.person.findFirst({
             where: { OR: [{ cpf }, { email }] },
           });
 
-        if (existingCustomer) {
+        if (existingPerson) {
           throw new AppError(ErrorMessages.MSGE02);
         }
     
@@ -55,43 +57,49 @@ export class CustomerRepository implements IRepository{
 
         const createdCustomer = await prismaClient.customer.create({
           data: {
-            name: customer.name,
-            cpf: customer.cpf,
-            birthdate: customer.birthdate,
-            phoneNumber: customer.phoneNumber,
-            email: customer.email,
-            password: hashPassword,
-            address: {
+            person: {
               create: {
-                street: customer.address.street,
-                number: customer.address.number,
-                neighborhood: customer.address.neighborhood,
-                city: customer.address.city,
-                state: customer.address.state,
-                cep: customer.address.cep,
+                name,
+                cpf,
+                birthdate,
+                phoneNumber,
+                email,
+                password: hashPassword,
+                address: {
+                  create: address.toJSON(),
+                },
               },
             },
           },
           include: {
-            address: true,
+            person: {
+              include: {
+                address: true,
+              }
+            },
           },
         });
 
         const dataToReturn = {
-          ...excludeFields(createdCustomer, [
+          ...excludeFields({...createdCustomer.person, id: createdCustomer.id}, [
             'createdAt',
             'updatedAt',
             'password',
           ]),
-      }
-      return dataToReturn;
+        };
+        return dataToReturn;
+    
     }
 
     async update(id: string, data: UpdateCustomerDTO){
       const customerToUpdate = await prismaClient.customer.findUnique({
         where: { id },
         include: {
-          address: true,
+          person: {
+            include: {
+              address: true,
+            }
+          }
         },
       });
 
@@ -100,27 +108,27 @@ export class CustomerRepository implements IRepository{
       }
 
       const address = new Address(
-        customerToUpdate.address.street,
-        customerToUpdate.address.number,
-        customerToUpdate.address.neighborhood,
-        customerToUpdate.address.city,
-        customerToUpdate.address.state,
-        customerToUpdate.address.cep,
-        customerToUpdate.address.id
+        customerToUpdate.person.address.street,
+        customerToUpdate.person.address.number,
+        customerToUpdate.person.address.neighborhood,
+        customerToUpdate.person.address.city,
+        customerToUpdate.person.address.state,
+        customerToUpdate.person.address.cep,
+        customerToUpdate.person.address.id
       );
 
       if(data.address){
         address.setAll(data.address);
         address.validate();
       }
-
+    
       const customer = new Customer(
-        customerToUpdate.name,
-        customerToUpdate.cpf,
-        customerToUpdate.birthdate.toISOString(),
-        customerToUpdate.phoneNumber,
-        customerToUpdate.email,
-        customerToUpdate.password,
+        customerToUpdate.person.name,
+        customerToUpdate.person.cpf,
+        customerToUpdate.person.birthdate.toISOString(),
+        customerToUpdate.person.phoneNumber,
+        customerToUpdate.person.email,
+        customerToUpdate.person.password,
         address.toJSON(),
         customerToUpdate.status as GenericStatus,
         customerToUpdate.id
@@ -131,12 +139,14 @@ export class CustomerRepository implements IRepository{
       if (data.birthdate !== undefined) customer.birthdate = data.birthdate;
       if (data.phoneNumber !== undefined) customer.phoneNumber = data.phoneNumber;
       if (data.email !== undefined) customer.email = data.email;
+      if (data.password !== undefined) customer.password = data.password;
+      if (data.address !== undefined) customer.address = data.address;
       if (data.status !== undefined) customer.status = data.status;
 
       customer.validate();
 
-      if (customer.cpf !== customerToUpdate.cpf) {
-        const existingCustomer = await prismaClient.customer.findFirst({
+      if (customer.cpf !== customerToUpdate.person.cpf) {
+        const existingCustomer = await prismaClient.person.findFirst({
           where: { cpf: customer.cpf },
         });
   
@@ -145,8 +155,8 @@ export class CustomerRepository implements IRepository{
         }
       }
   
-      if (customer.email !== customerToUpdate.email) {
-        const existingCustomer = await prismaClient.customer.findFirst({
+      if (customer.email !== customerToUpdate.person.email) {
+        const existingCustomer = await prismaClient.person.findFirst({
           where: { email: customer.email },
         });
   
@@ -160,26 +170,34 @@ export class CustomerRepository implements IRepository{
       const updatedCustomer = await prismaClient.customer.update({
         where: { id },
         data: {
-          status: customer.status,
-          name: customer.name,
-          cpf: customer.cpf,
-          birthdate: customer.birthdate,
-          phoneNumber: customer.phoneNumber,
-          email: customer.email,
-          password: customer.password,
-          address: {
-            update: {
-              ...address.toJSON(),
-            },
-          },  
+          person: {
+            update:{
+              status: customer.status,
+              name: customer.name,
+              cpf: customer.cpf,
+              birthdate: customer.birthdate,
+              phoneNumber: customer.phoneNumber,
+              email: customer.email,
+              password: customer.password,
+              address: {
+                update: {
+                  ...address.toJSON(),
+                },
+              }, 
+            }
+          }  
         },
         include: {
-          address: true,
+          person: {
+            include: {
+              address: true,
+            }
+          },
         },
       });      
 
     const dataToReturn = {
-      ...excludeFields(updatedCustomer, [
+      ...excludeFields({...updatedCustomer.person, id: updatedCustomer.id}, [
         'createdAt',
         'updatedAt',
         'password',
@@ -197,19 +215,25 @@ export class CustomerRepository implements IRepository{
       OR: args?.searchTerm
         ? [
             {
-              name: {
+              person: {
+                name: {
                 contains: args?.searchTerm,
+                }
               },
             },
             {
+              person: {
               cpf: {
                 contains: args?.searchTerm,
               },
             },
+            },
             {
+              person: {
               email: {
                 contains: args?.searchTerm,
               },
+            },
             },
           ]
         : undefined,
@@ -227,12 +251,16 @@ export class CustomerRepository implements IRepository{
       skip: args?.skip,
       take: args?.take,
       include: {
-        address: true,
+        person: {
+          include: {
+            address: true,
+          }
+        },
       },
     });
 
     const dataToUse = data.map((customer) => ({
-      ...excludeFields(customer, [
+      ...excludeFields({...customer.person, id: customer.id}, [
         'createdAt',
         'updatedAt',
         'password',
