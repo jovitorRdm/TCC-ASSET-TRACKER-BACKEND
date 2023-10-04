@@ -1,14 +1,20 @@
-import { parseArrayOfData } from "../../helpers/utils";
-import { excludeFields } from "../../helpers/utils/excludeFields";
+import { parseArrayOfData,excludeFields} from "../../helpers/utils";
 import { AppError, ErrorMessages } from "../../infra/http/errors";
 import { prismaClient } from "../../infra/prisma";
 import { FindAllArgs, IRepository } from "../../interfaces";
+import { AccountType, CreateAssignmentDTO, PaymentMethod, UpdateAssignmentDTO } from "../dtos";
 import { Assignment } from "../domains";
-import { AccountType, CreateAssignmentDTO, GenericStatus, PaymentMethod, UpdateAssignmentDTO } from "../dtos";
 
 export class AssignmentRepository implements IRepository {
 
-  async create({ name, description, paymentMethod, paymentValue, accountRequirement, accountType }: CreateAssignmentDTO) {
+  async create({ 
+    name, 
+    description, 
+    paymentMethod, 
+    paymentValue, 
+    accountRequirement, 
+    accountType 
+  }: CreateAssignmentDTO) {
     const existingAssignment = await prismaClient.assignment.findFirst({
       where: {
         name
@@ -19,7 +25,13 @@ export class AssignmentRepository implements IRepository {
       throw new AppError(ErrorMessages.MSGE02);
     }
 
-    const assignment = new Assignment(name, description, paymentMethod, paymentValue, accountRequirement, accountType);
+    const assignment = new Assignment(
+      name, 
+      description, 
+      paymentMethod, 
+      paymentValue, 
+      accountRequirement, 
+      accountType);
 
     assignment.validate();
 

@@ -4,7 +4,6 @@ import { FindAllArgs, IRepository } from "../../interfaces/IRepository";
 import { Address } from "../domains/Address";
 import { GenericStatus } from "../dtos";
 import { prismaClient } from "../../infra/prisma";
-import { generatePassword } from "../../helpers/utils/generatePassword";
 import { excludeFields } from '../../helpers/utils/excludeFields';
 import { CreateCustomerDTO, UpdateCustomerDTO } from '../dtos/customer';
 import { Customer } from '../domains/Customer';
@@ -13,8 +12,8 @@ import { Person } from '../domains/Person';
 
 export class CustomerRepository implements IRepository {
     async create({
+          document,
           name,
-          cpf,
           address: addressData,
           birthdate,
           phoneNumber,
@@ -22,7 +21,7 @@ export class CustomerRepository implements IRepository {
       }: CreatePersonDTO) {
 
         const existingPerson = await prismaClient.person.findFirst({
-            where: { OR: [{ cpf }, { email }] },
+            where: { OR: [{ document }, { email }] },
           });
 
         if (existingPerson) {
@@ -41,30 +40,23 @@ export class CustomerRepository implements IRepository {
         address.validate();
 
         const customer = new Customer(
+          document,
           name, 
-          cpf, 
           birthdate,
           phoneNumber,
           email,
-          generatePassword(),
           address.toJSON()
         )
-
-        const hashPassword = await bcrypt.hash(
-          customer.password,
-          8
-        );
 
         const createdCustomer = await prismaClient.customer.create({
           data: {
             person: {
               create: {
                 name,
-                cpf,
+                document,
                 birthdate,
                 phoneNumber,
                 email,
-                password: hashPassword,
                 address: {
                   create: address.toJSON(),
                 },
@@ -81,10 +73,14 @@ export class CustomerRepository implements IRepository {
         });
 
         const dataToReturn = {
-          ...excludeFields({...createdCustomer.person, id: createdCustomer.id}, [
+          ...excludeFields(
+            {
+              ...createdCustomer.person, 
+              id: createdCustomer.id
+            },
+             [
             'createdAt',
             'updatedAt',
-            'password',
           ]),
         };
         return dataToReturn;
@@ -123,34 +119,32 @@ export class CustomerRepository implements IRepository {
       }
     
       const customer = new Customer(
+        customerToUpdate.person.document,
         customerToUpdate.person.name,
-        customerToUpdate.person.cpf,
         customerToUpdate.person.birthdate.toISOString(),
         customerToUpdate.person.phoneNumber,
         customerToUpdate.person.email,
-        customerToUpdate.person.password,
         address.toJSON(),
         customerToUpdate.status as GenericStatus,
         customerToUpdate.id
       );
 
+      if (data.document !== undefined) customer.document = data.document;
       if (data.name !== undefined) customer.name = data.name;
-      if (data.cpf !== undefined) customer.cpf = data.cpf;
       if (data.birthdate !== undefined) customer.birthdate = data.birthdate;
       if (data.phoneNumber !== undefined) customer.phoneNumber = data.phoneNumber;
       if (data.email !== undefined) customer.email = data.email;
-      if (data.password !== undefined) customer.password = data.password;
       if (data.address !== undefined) customer.address = data.address;
       if (data.status !== undefined) customer.status = data.status;
 
       customer.validate();
 
-      if (customer.cpf !== customerToUpdate.person.cpf) {
-        const existingCustomer = await prismaClient.person.findFirst({
-          where: { cpf: customer.cpf },
+      if (customer.document !== customerToUpdate.person.document) {
+        const existingPerson = await prismaClient.person.findFirst({
+          where: { document: customer.document },
         });
   
-        if (existingCustomer) {
+        if (existingPerson) {
           throw new AppError(ErrorMessages.MSGE02);
         }
       }
@@ -164,21 +158,18 @@ export class CustomerRepository implements IRepository {
           throw new AppError(ErrorMessages.MSGE02);
         }
       }
-
-      
-      
+   
       const updatedCustomer = await prismaClient.customer.update({
         where: { id },
         data: {
           person: {
             update:{
+              document: customer.document,
               status: customer.status,
               name: customer.name,
-              cpf: customer.cpf,
               birthdate: customer.birthdate,
               phoneNumber: customer.phoneNumber,
               email: customer.email,
-              password: customer.password,
               address: {
                 update: {
                   ...address.toJSON(),
@@ -200,7 +191,6 @@ export class CustomerRepository implements IRepository {
       ...excludeFields({...updatedCustomer.person, id: updatedCustomer.id}, [
         'createdAt',
         'updatedAt',
-        'password',
         'addressid',
       ]),
     }  
@@ -223,7 +213,7 @@ export class CustomerRepository implements IRepository {
             },
             {
               person: {
-              cpf: {
+              document: {
                 contains: args?.searchTerm,
               },
             },
@@ -263,7 +253,6 @@ export class CustomerRepository implements IRepository {
       ...excludeFields({...customer.person, id: customer.id}, [
         'createdAt',
         'updatedAt',
-        'password',
       ]),
     }));
 
@@ -283,6 +272,5 @@ export class CustomerRepository implements IRepository {
     } catch {
       throw new AppError(ErrorMessages.MSGE02);
     }
-  }
-     
+  }     
 }

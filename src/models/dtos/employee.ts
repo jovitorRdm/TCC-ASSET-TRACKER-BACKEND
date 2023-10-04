@@ -1,11 +1,10 @@
 import { AddressDTO, CreateAddressDTO } from "./address";
 import { GenericStatus } from "./status";
-
 export interface EmployeeDTO {   
     id: string;
     status: GenericStatus;
     name: string;
-    cpf: string;
+    document: string;
     email: string;
     address: CreateAddressDTO;
     birthdate: string;
@@ -21,7 +20,7 @@ export interface EmployeeDTO {
     id?: string;
     status?: GenericStatus;
     name?: string;
-    cpf?: string;
+    document?: string;
     email?: string;
     address?: AddressDTO;
     birthdate?: string;

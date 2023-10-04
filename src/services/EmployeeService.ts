@@ -1,12 +1,12 @@
 import { generatePassword } from "../helpers/utils/generatePassword";
 import { FindAllArgs, IService } from "../interfaces";
-import { CreateEmployeeDTO, GenericStatus, UpdateEmployeeDTO } from "../models/dtos";
+import { CreatedEmployeeDTO, GenericStatus, UpdateEmployeeDTO } from "../models/dtos";
 import { EmployeeRepository } from "../models/repositories/EmployeeRepository";
 
 export class EmployeeService implements IService{
     private employeeRepository = new EmployeeRepository();
 
-    async create(data: CreateEmployeeDTO) {
+    async create(data: CreatedEmployeeDTO) {
         const employee = await this.employeeRepository.create(data);
 
         return employee;
@@ -32,7 +32,6 @@ export class EmployeeService implements IService{
       }
     async list(args: FindAllArgs = {}) {
         const result = await this.employeeRepository.findAll(args);
-
         return result;
     }
 

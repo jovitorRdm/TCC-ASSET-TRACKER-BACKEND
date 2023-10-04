@@ -1,7 +1,7 @@
-import { AddressDTO, CreateAddressDTO } from "./address";
+import { AddressDTO, CreateAddressDTO, UpdateAddressDTO } from "./address";
 import { GenericStatus } from "./status";
 
-export interface personDTO {   
+export interface SupplierDTO {
     id: string;
     status: GenericStatus;
     name: string;
@@ -10,14 +10,13 @@ export interface personDTO {
     address: CreateAddressDTO;
     birthdate: string;
     phoneNumber: string;
-    password?: string;
-  }
-  
-  export interface CreatePersonDTO 
-    extends Omit<personDTO, 'id' > {}
-  
-  
-  export interface UpdatePersonDTO {
+    password: string;
+}
+
+export interface CreatedSupplierDTO 
+    extends Omit<SupplierDTO, 'id' > {}
+
+export interface UpdateSupplierDTO {
     id?: string;
     status?: GenericStatus;
     name?: string;
@@ -26,7 +25,4 @@ export interface personDTO {
     address?: AddressDTO;
     birthdate?: string;
     phoneNumber?: string;
-    password?: string;
-    assignmentId?: string;
-  }
-  
+}

@@ -1,6 +1,6 @@
 import { PaginatedResponse } from "../../helpers/utils/PaginatedResponse";
 import { Request, Response } from 'express'
-import { AssignmentDTO, EmployeeDTO } from "../../models/dtos";
+import { EmployeeDTO } from "../../models/dtos";
 import { EmployeeService } from "../../services/EmployeeService";
 
 export class ListEmployeeController {

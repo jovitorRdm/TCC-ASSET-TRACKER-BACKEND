@@ -1,10 +1,9 @@
-import { parseArrayOfData } from "../../helpers/utils";
-import { excludeFields } from "../../helpers/utils/excludeFields";
+import { parseArrayOfData, excludeFields} from "../../helpers/utils";
 import { AppError, ErrorMessages } from "../../infra/http/errors";
 import { prismaClient } from "../../infra/prisma";
-import { FindAllArgs, FindAllReturn, IRepository } from "../../interfaces";
+import { FindAllArgs, IRepository } from "../../interfaces";
 import { Service } from "../domains/Service";
-import { AssignmentDTO, GenericStatus, UpdateServiceDTO } from "../dtos";
+import { GenericStatus, UpdateServiceDTO } from "../dtos";
 
 export class ServiceRepository implements IRepository {
 

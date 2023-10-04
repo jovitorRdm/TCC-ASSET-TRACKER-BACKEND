@@ -10,7 +10,7 @@ export class ChangeAccountStatusController {
         const assignmentService = new AssignmentService();
 
         if (status === undefined) {
-            throw new AppError(ErrorMessages.invalidData);
+            throw new AppError(ErrorMessages.MSGE06);
         }
 
         const assignment = await assignmentService.changeStatus(id, status);

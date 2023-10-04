@@ -1,12 +1,15 @@
 import { GenericStatus } from "./status";
+import { MeasurementUnit } from "./measurementUnite";
 
-export interface CreateProductDTO{
-    name: string;
+export interface CreateProductDTO {
+    name: string; 
+    quantity: number;
+    quantityPerson: number; 
+    consumptionPerPerson: number;
+    measurementUnit: MeasurementUnit;
     description: string;
-    productValue: number;
-    productQuantity: number;
-    assignments: string[];
-}
+    value: number;
+  }
 
 export interface ProductDTO extends CreateProductDTO {
     id: string;
@@ -16,9 +19,11 @@ export interface ProductDTO extends CreateProductDTO {
 export interface UpdateProductDTO {
     id?: string;
     status?: GenericStatus;
-    name?: string;
+    name?: string; 
+    quantity?: number;
+    quantityPerson?: number; 
+    consumptionPerPerson?: number;
+    measurementUnit?: MeasurementUnit;
     description?: string;
-    productValue?: number;
-    productQuantity?: number;
-    assignments?: string[];
+    value?: number;
 }

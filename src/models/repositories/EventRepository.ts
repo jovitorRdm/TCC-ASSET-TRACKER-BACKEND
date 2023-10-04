@@ -1,35 +1,33 @@
-import { parseArrayOfData } from "../../helpers/utils";
-import { excludeFields } from "../../helpers/utils/excludeFields";
+import { CreateEventDTO, UpdateEventDTO, GenericStatus } from "../dtos";
+import { EventType } from "../domains";
 import { AppError, ErrorMessages } from "../../infra/http/errors";
 import { prismaClient } from "../../infra/prisma";
-import { FindAllArgs, FindAllReturn, IRepository } from "../../interfaces";
-import { EventType } from "../domains/EventType";
-import { GenericStatus } from "../dtos";
-import { CreateEventDTO, UpdateEventDTO } from "../dtos/events";
+import { parseArrayOfData, excludeFields} from "../../helpers/utils";
+import { FindAllArgs, IRepository } from "../../interfaces";
 
 export class EventRepository implements IRepository {
   async create({ name, description }: CreateEventDTO) {
+
     const existingEvent = await prismaClient.eventType.findUnique({
       where: { name }
-    }); // valida se o evento já existe
+    }); 
 
     if (existingEvent) {
       throw new AppError(ErrorMessages.MSGE02);
-    } // caso exista o evento, retorna um erro
+    } 
 
-    const event = new EventType(name, description); // cria um novo objeto de tipo EventType
+    const event = new EventType(name, description);
 
-    event.validate(); // valida o objeto
+    event.validate();
 
     const createEvent = await prismaClient.eventType.create({
       data: {
         name: event.name,
         description: event.description,
       }
-    }); // cria o evento no banco
+    });
 
     return excludeFields(createEvent, ['createdAt', 'updatedAt']);
-    // retorna os dados do evento que foi criado no banco de dados 
   }
   async update(id: string, data: UpdateEventDTO) {
     try {

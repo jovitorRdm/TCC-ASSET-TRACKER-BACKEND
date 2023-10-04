@@ -93,11 +93,11 @@ model Person {
   id          String   @id @default(uuid())
   status      Status   @default(active)
   name        String   @db.VarChar(120)
-  cpf         String   @unique @db.VarChar(11)
+  document    String   @unique @db.VarChar(14) // if(11 == cpf ou 14 == cnpj)
   birthdate   DateTime
   phoneNumber String   @map("phone_number") @db.VarChar(11)
   email       String   @unique @db.VarChar(256)
-  password    String
+  password    String?
   address     Address  @relation(fields: [addressid], references: [id])
   addressid   String   @unique @map("address_id")
 
@@ -112,11 +112,9 @@ model Person {
 
 // CLIENTE
 model Customer {
-  id       String @id @default(uuid())
-  status   Status @default(active)
-  personid String @unique
-  person   Person @relation(fields: [personid], references: [id])
-
+  id        String   @id @default(uuid())
+  personid  String   @unique
+  person    Person   @relation(fields: [personid], references: [id])
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
@@ -126,7 +124,6 @@ model Customer {
 // COLABORADOR
 model Employee {
   id           String     @id @default(uuid())
-  status       Status     @default(active)
   personid     String     @unique
   person       Person     @relation(fields: [personid], references: [id])
   assignmentId String
@@ -139,7 +136,6 @@ model Employee {
 
 model Supplier {
   id        String   @id @default(uuid())
-  status    Status   @default(active)
   personid  String   @unique
   person    Person   @relation(fields: [personid], references: [id])
   createdAt DateTime @default(now()) @map("created_at")
