@@ -1,22 +1,19 @@
 import { AppError, ErrorMessages } from "../../infra/http/errors";
-import { GenericStatus } from "../dtos";
+import { GenericStatus, MeasurementUnit } from "../dtos";
 import { z } from "zod";
 
 export class Product {
     constructor(
         private _name: string,
         private _description: string,
-        private _productValue: number,
-        private _productQuantity: number,
-        private _assignments: string[],
+        private _consumptionPerPerson: number,
+        private _measurementUnit: MeasurementUnit,
+        private _quantity: number,
+        private _value: number,
+        private _id?: string,
         private _status?: GenericStatus,
-        private _id?: string
 
     ) {}
-   
-    get id() {
-        return this._id!;
-    }
 
     get name() {
         return this._name;
@@ -26,16 +23,23 @@ export class Product {
         return this._description;
     }
 
-    get assignments() {
-        return this._assignments;
+    get consumptionPerPerson() {
+        return this._consumptionPerPerson;
     }
 
-    get productValue() {
-        return this._productValue;
+    get measurementUnit() {
+        return this._measurementUnit;
     }
 
-    get productQuantity() {
-        return this._productQuantity;
+    get quantity() {
+        return this._quantity;
+    }
+    get value() {
+        return this._value;
+    }
+
+    get id() {
+        return this._id!;
     }
 
     get status() {
@@ -50,46 +54,75 @@ export class Product {
         this._name = name;
     }
 
+    set quantity(quantity: number) {
+        this._quantity = quantity;
+    }
+
+    set value(value: number) {
+        this._value = value;
+    }
+
+
+    set consumptionPerPerson(consumptionPerPerson: number) {
+        this._consumptionPerPerson = consumptionPerPerson;
+    }
+
+    set measurementUnit(measurementUnit: MeasurementUnit) {
+        this._measurementUnit = measurementUnit;
+    }
+
     set description(description: string) {
         this._description = description;
-    }
-
-    set assignments(assignments: string[]) {
-        this._assignments = assignments;
-    }
-
-    set productValue(productValue: number) {
-        this._productValue = productValue;
-    }
-
-    set productQuantity(productQuantity: number) {
-        this._productQuantity = productQuantity;
     }
 
     set status(status: GenericStatus) {
         this._status = status;
     }
 
+    toJSON() {
+        return {
+            name: this.name,
+            consumptionPerPerson: this.consumptionPerPerson,
+            measurementUnit: this.measurementUnit,
+            description: this.description,
+            id: this.id,
+            status: this.status,
+        };
+    }
+
     validate() {
         const productSchema = z
-        .object({
-            id: z.string().uuid('id inválido'),
-            status: z.enum([GenericStatus.active, GenericStatus.inactive], {
-              errorMap: () => new AppError(ErrorMessages.MSGE06),
-            }),
-            name: z
-              .string({ required_error: ErrorMessages.MSGE01 })
-              .min(3, ErrorMessages.MSGE08)
-              .max(120, ErrorMessages.MSGE09),
-            description: z.string().max(500, ErrorMessages.MSGE09),
-            assignments: z.array(z.string().uuid('id de atribuição inválido')),
-            // productValue: z.number().negative(ErrorMessages.MSGE06),
-            // productQuantity: z.number().negative(ErrorMessages.MSGE06),
-          })
-          .partial({ id: true, status: true });
+            .object({
+                id: z.string().uuid('ID inválido'),
+                status: z.enum([GenericStatus.active, GenericStatus.inactive], {
+                    errorMap: () =>
+                        new AppError(ErrorMessages.MSGE06),
+                }),
+                name: z
+                    .string({ required_error: ErrorMessages.MSGE07 })
+                    .min(3, 'Nome deve conter pelo menos 3 caracteres')
+                    .max(120, 'Nome não deve ser maior que 120 caracteres'),
+                description: z
+                    .string({ required_error: ErrorMessages.MSGE08 })
+                    .min(3, 'a descrição deve conter pelo menos 3 caracteres')
+                    .max(500, 'a descrição não deve ser maior que 500 caracteres'),
+
+                measurementUnit: z.enum([
+                    MeasurementUnit.UNIT,
+                        MeasurementUnit.PACKAGE, 
+                        MeasurementUnit.KILOGRAM, 
+                        MeasurementUnit.LITER, 
+                        MeasurementUnit.METER
+                    ], {
+                        errorMap: () => new AppError(ErrorMessages.MSGE06),
+                }),
+                quantity: z.number(),
+                value: z.number(),
+            })
     
+            .partial({ id: true, status: true })
         try {
-          productSchema.parse(this);
+            productSchema.parse(this);
         } catch (err) {
           throw new AppError(err.issues[0].message);
         }

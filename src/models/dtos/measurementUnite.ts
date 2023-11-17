@@ -1,8 +1,7 @@
 export enum MeasurementUnit {
-    UNIT = 'Unidade',
-    PACKAGE = 'Pacote',
-    KILOGRAM = 'Quilograma',
-    LITER = 'Litro',
-    METER = 'Metro',
-    CENTIMETER = 'Centímetro',
+    UNIT = 'unit',
+    PACKAGE = 'package',
+    KILOGRAM = 'kilogram',
+    LITER = 'liter',
+    METER = 'meter',
   }

@@ -4,7 +4,7 @@ import { GenericStatus } from '../dtos';
 
 
 export class EventType {
-    constructor( //O constructor é responsável por criar e inicializar os objetos dessa classe quando são instanciados 
+    constructor(
         private _name: string,
         private _description?: string | null,
         private _id?: string,
@@ -58,7 +58,7 @@ export class EventType {
                 id: z.string().uuid('ID inválido'),
                 status: z.enum([GenericStatus.active, GenericStatus.inactive], {
                     errorMap: () =>
-                        new AppError(`'${this._status}' não é um status válido`),
+                        new AppError(ErrorMessages.MSGE06),
                 }),
                 name: z
                     .string({ required_error: ErrorMessages.MSGE07 })

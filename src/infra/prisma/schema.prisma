@@ -15,12 +15,11 @@ enum PaymentMethod {
 }
 
 enum MeasurementUnit {
-  UNIT
-  PACKAGE
-  KILOGRAM
-  LITER
-  METER
-  CENTIMETER
+  unit
+  package
+  kilogram
+  liter
+  meter
 }
 
 enum AccountType {
@@ -57,8 +56,6 @@ model Assignment {
   updatedAt          DateTime      @updatedAt @map("updated_at")
   Employee           Employee[]
   services           Service[]
-  Product            Product?      @relation(fields: [productId], references: [id])
-  productId          String?
 
   @@map("assignment")
 }
@@ -113,6 +110,7 @@ model Person {
 // CLIENTE
 model Customer {
   id        String   @id @default(uuid())
+  status    Status   @default(active)
   personid  String   @unique
   person    Person   @relation(fields: [personid], references: [id])
   createdAt DateTime @default(now()) @map("created_at")
@@ -124,6 +122,7 @@ model Customer {
 // COLABORADOR
 model Employee {
   id           String     @id @default(uuid())
+  status       Status     @default(active)
   personid     String     @unique
   person       Person     @relation(fields: [personid], references: [id])
   assignmentId String
@@ -135,11 +134,13 @@ model Employee {
 }
 
 model Supplier {
-  id        String   @id @default(uuid())
-  personid  String   @unique
-  person    Person   @relation(fields: [personid], references: [id])
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id            String          @id @default(uuid())
+  status        Status          @default(active)
+  personid      String          @unique
+  person        Person          @relation(fields: [personid], references: [id])
+  createdAt     DateTime        @default(now()) @map("created_at")
+  updatedAt     DateTime        @updatedAt @map("updated_at")
+  FiscalProduct FiscalProduct[]
 
   @@map("supplier")
 }
@@ -157,16 +158,32 @@ model Service {
 }
 
 model Product {
-  id          String  @id @default(uuid())
-  name        String  @unique @db.VarChar(120)
-  description String? @db.VarChar(500)
-  quantity    Int
-  value       Float
-
-  status      Status       @default(active)
-  assignments Assignment[]
-  createdAt   DateTime     @default(now()) @map("created_at")
-  updatedAt   DateTime     @updatedAt @map("updated_at")
+  id                   String          @id @default(uuid())
+  name                 String          @unique @db.VarChar(120)
+  description          String?         @db.VarChar(500)
+  consumptionPerPerson Float
+  measurementUnit      MeasurementUnit @default(unit)
+  quantity             Float
+  value                Float
+  status               Status          @default(active)
+  createdAt            DateTime        @default(now()) @map("created_at")
+  updatedAt            DateTime        @updatedAt @map("updated_at")
+  FiscalProduct        FiscalProduct[]
 
   @@map("product")
+}
+
+model FiscalProduct {
+  id            String    @id @default(uuid())
+  status        Status    @default(active)
+  supplier      Supplier  @relation(fields: [supplierId], references: [id])
+  invoiceNumber String
+  issueDate     DateTime
+  supplierId    String
+  Product       Product[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("fiscal_Product")
 }

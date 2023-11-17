@@ -1,160 +1,193 @@
-import { excludeFields, parseArrayOfData } from "../../helpers/utils";
+
 import { AppError, ErrorMessages } from "../../infra/http/errors";
 import { prismaClient } from "../../infra/prisma";
-import { FindAllArgs, IRepository } from "../../interfaces";
-import { Product } from "../domains";
-import { CreateProductDTO, UpdateProductDTO } from "../dtos";
+import { CreateProductDTO, GenericStatus, MeasurementUnit, UpdateProductDTO } from "../dtos";
+import { excludeFields } from '../../helpers/utils';
+import { FindAllArgs } from "../../interfaces";
+import { FiscalProduct, Product } from "../domains";
 
 
+export class ProductRepository {
 
-export class ProductRepository{
-    async create({name, description, assignments,productQuantity,productValue }: CreateProductDTO){
-        const existingProduct = await prismaClient.product.findUnique({
-            where: { name }
-        });
+    async create({
+        name,
+        description, 
+        measurementUnit, 
+        consumptionPerPerson,
+        quantity,
+        value,
+    }:CreateProductDTO){
+
+        const existingProduct = await prismaClient.product.findUnique(
+            {
+                where: { name }
+            }
+        );
 
         if (existingProduct) {
-            throw new AppError(ErrorMessages.MSGE02);
+            throw new Error(ErrorMessages.MSGE02);
         }
 
         const product = new Product(
-            name,
-            description,
-            productValue,
-            productQuantity,
-            assignments, 
+            name, 
+            description, 
+            consumptionPerPerson,
+            measurementUnit,
+            quantity = 0,
+            value = 0,           
         )
 
         product.validate();
 
         const createProduct = await prismaClient.product.create({
-        data: {
-            name: product.name,
-            description: product.description,
-            productValue: product.productValue,
-            productQuantity: product.productQuantity,
-            assignments: {
-                connect: product.assignments.map((id) => ({ id: id }))
+            data: {
+                name: product.name,
+                description: product.description,
+                consumptionPerPerson: product.consumptionPerPerson,
+                measurementUnit: product.measurementUnit,
+                quantity: product.quantity,
+                value: product.value,
+            },
+            include: {
+                FiscalProduct: true
             }
-        },
-        include: {
-            assignments: true
-        }
-        })
-        
-        return excludeFields(createProduct, ['createdAt', 'updatedAt'])
+        });
+
+        return excludeFields(createProduct, ['createdAt', 'updatedAt']);
     }
 
     async update(id: string, data: UpdateProductDTO){
-        try {
-            const productToUpdate = await prismaClient.product.findUniqueOrThrow({
-                where: { id },
-                include: { assignments: true }
+        try{
+            const productToUpdate = await prismaClient.product.findUnique({
+                where: { id }
             })
-
+            
             const product = new Product(
                 productToUpdate.name,
-                productToUpdate.description as string,
-                productToUpdate.productValue,
-                productToUpdate.productQuantity,
-                productToUpdate.assignments.map((assignment) => assignment.id),
+                productToUpdate.description,
+                productToUpdate.consumptionPerPerson,
+                productToUpdate.measurementUnit as MeasurementUnit,
+                productToUpdate.quantity,
+                productToUpdate.value
             )
-
+    
             if(data.name !== undefined) product.name = data.name;
             if(data.description !== undefined) product.description = data.description;
-            if(data.productQuantity !== undefined) product.productQuantity = data.productQuantity;
-            if(data.productValue !== undefined) product.productValue = data.productValue;
+            if(data.consumptionPerPerson !== undefined) product.consumptionPerPerson = data.consumptionPerPerson;
+            if(data.measurementUnit !== undefined) product.measurementUnit = data.measurementUnit;
+            if(data.quantity !== undefined) product.quantity = data.quantity;
+            if(data.value !== undefined) product.value = data.value;
             if(data.status !== undefined) product.status = data.status;
-            if(data.assignments !== undefined) product.assignments = data.assignments;
-            
-            product.validate();
+    
+            product.validate()
 
-            const needsToUpdateAssignments = JSON.stringify(productToUpdate.assignments) !== JSON.stringify(product.assignments);
-
-            if(needsToUpdateAssignments){
-                await prismaClient.product.update({
-                    where: { id },
-                    data: {
-                        assignments: {
-                            disconnect: productToUpdate.assignments.map((assignment) => ({ id: assignment.id }))
-                        }
-                    }
-                })  
-            }
-
-            if(product.name !== productToUpdate.name) {
+            if (product.name !== product.name) {
                 const existingProduct = await prismaClient.product.findUnique({
-                    where: { name: product.name }
+                  where: { name: product.name }
                 });
-
+        
                 if (existingProduct) {
-                    throw new AppError(ErrorMessages.MSGE02);
+                  throw new AppError(ErrorMessages.MSGE02);
                 }
-            }
-
-            const updateProduct = await prismaClient.product.update({
+              }
+    
+            const updatedProduct = await prismaClient.product.update({
                 where: { id },
                 data: {
                     name: product.name,
                     description: product.description,
-                    productValue: product.productValue,
-                    productQuantity: product.productQuantity,
-                    assignments: {
-                        connect: product.assignments.map((id) => ({ id: id }))
-                    }
+                    consumptionPerPerson: product.consumptionPerPerson,
+                    measurementUnit: product.measurementUnit,
+                    quantity: product.quantity,
+                    value: product.value,
+                    status: product.status
                 },
-                include: {
-                    assignments: true
-                }
-            })
+                
+            });
+    
+            const dataToReturn = {
+                ...excludeFields(
+                {
+                    ...updatedProduct,
+                },
+                [
+                    'createdAt',
+                    'updatedAt',
+                ]),
+            }
+    
+            return dataToReturn;   
+        }
+        catch(e){
+            if(e instanceof AppError) throw e;
 
-            return excludeFields(updateProduct, ['createdAt', 'updatedAt'])
-
-        } catch (e) {
-            if (e instanceof AppError) throw e;
-            throw new AppError(ErrorMessages.MSGE05, 404);
+            throw new AppError(ErrorMessages.MSGE02, 404);
         }
     }
-        
-    async findAll(args: FindAllArgs) {
+
+    async findAll(args?: FindAllArgs){
         const where = {
-          OR: args.searchTerm
-            ? [
-              {
-                name: {
-                  contains: args?.searchTerm,
-                },
-              },
-              {
-                description: {
-                  contains: args?.searchTerm,
-                },
-              },
-            ]
-            : undefined,
-          status: {
-            equals: args?.filterByStatus,
-          },
-        };
-    
-        const totalItems = await prismaClient.product.count({ where });
-    
+            NOT: args?.itemsToExclude
+              ? { id: { in: args?.itemsToExclude } }
+              : undefined,
+            OR: args?.searchTerm
+              ? [
+                  {
+                    name: {
+                      contains: args?.searchTerm,
+                    },
+                  },
+                  {
+                    description: {
+                      contains: args?.searchTerm,
+                    },
+                  },
+                ]
+              : undefined,
+            status:{
+              equals: args?.filterByStatus,
+            }
+        }
+        const totalItems = await prismaClient.product.count({
+            where,
+        })
+
         const data = await prismaClient.product.findMany({
-          where,
-          include: {
-            assignments: true
-          },
-          orderBy: { createdAt: 'asc' },
-          skip: args?.skip,
-          take: args?.take,
-        });
-    
-        return {
-          data: parseArrayOfData(data, ['createdAt', 'updatedAt']),
-          totalItems,
-        };
-      }
-        
+            where,
+            orderBy: { createdAt: 'asc' },
+            skip: args?.skip,
+            take: args?.take,
+        })
+
+        const dataToReturn = {
+            data,
+            totalItems
+        }
+
+        return dataToReturn;
+    }
+
+    async findById(id: string){
+        const product = await prismaClient.product.findUnique({
+            where: { id }
+        })
+
+        if(!product){
+            throw new Error(ErrorMessages.MSGE05);
+        }
+
+        const dataToReturn = {
+            ...excludeFields(
+            {
+                ...product,
+            },
+            [
+                'createdAt',
+                'updatedAt',
+            ]),
+        }
+
+        return dataToReturn;
+    }
+
 }
-
-

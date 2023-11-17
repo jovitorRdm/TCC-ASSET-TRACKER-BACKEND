@@ -3,12 +3,15 @@ import { AppError, ErrorMessages } from "../../infra/http/errors";
 import { prismaClient } from "../../infra/prisma";
 import { FindAllArgs, IRepository } from "../../interfaces";
 import { Service } from "../domains/Service";
-import { GenericStatus, UpdateServiceDTO } from "../dtos";
+import { CreateServiceDTO, GenericStatus, UpdateServiceDTO } from "../dtos";
 
 export class ServiceRepository implements IRepository {
 
-
-  async create({ name, description, assignments }){
+  async create({ 
+    name, 
+    description, 
+    assignments 
+  }: CreateServiceDTO) {
     const existingService = await prismaClient.service.findUnique({
       where: { name }
       
@@ -41,13 +44,15 @@ export class ServiceRepository implements IRepository {
   }
   async update(id: string, data: UpdateServiceDTO) {
     try {
-      const serviceToUpdate = await prismaClient.service.findUniqueOrThrow({ where: { id }, include: { assignments: true } });  
+      const serviceToUpdate = await prismaClient.service.findUniqueOrThrow({ 
+        where: { id }, 
+        include: { assignments: true } 
+      });  
 
       const service = new Service(
         serviceToUpdate.name,
         serviceToUpdate.description as string,
-        serviceToUpdate.assignments.map((assignment) => assignment.id), 
-        serviceToUpdate.status as GenericStatus
+        serviceToUpdate.assignments.map((assignment) => assignment.id),
       );
 
       if (data.name !== undefined) service.name = data.name;

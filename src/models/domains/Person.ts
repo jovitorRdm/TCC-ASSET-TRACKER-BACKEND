@@ -2,7 +2,7 @@ import { z } from "zod";
 import { validateCPF } from "../../helpers/validators";
 import { AppError, ErrorMessages } from "../../infra/http/errors";
 import { AddressDTO, CreateAddressDTO, GenericStatus } from "../dtos";
-import { CreatePersonDTO, UpdatePersonDTO, personDTO } from "../dtos/person";
+import {  UpdatePersonDTO } from "../dtos/person";
 import { validateCNPJ } from "../../helpers/validators/cnpj";
 
 

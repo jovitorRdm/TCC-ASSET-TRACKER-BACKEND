@@ -8,4 +8,5 @@ export * from './Person'
 export * from './Product'
 export * from './Service'
 export * from './Supplier'
+export * from './fiscalProduct'
 
