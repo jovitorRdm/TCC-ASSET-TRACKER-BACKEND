@@ -168,22 +168,40 @@ model Product {
   status               Status          @default(active)
   createdAt            DateTime        @default(now()) @map("created_at")
   updatedAt            DateTime        @updatedAt @map("updated_at")
-  FiscalProduct        FiscalProduct[]
+
+  ProductEntry ProductEntry[]
 
   @@map("product")
 }
 
 model FiscalProduct {
-  id            String    @id @default(uuid())
-  status        Status    @default(active)
-  supplier      Supplier  @relation(fields: [supplierId], references: [id])
-  invoiceNumber String
-  issueDate     DateTime
-  supplierId    String
-  Product       Product[]
+  id             String         @id @default(uuid())
+  status         Status         @default(active)
+  supplier       Supplier       @relation(fields: [supplierId], references: [id])
+  invoiceNumber  String
+  issueDate      DateTime
+  supplierId     String
+  productEntries ProductEntry[]
+
+  totalAmount Float @default(0)
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("fiscal_Product")
+}
+
+model ProductEntry {
+  id String @id @default(uuid())
+
+  productId String
+  quantity  Float
+  value     Float
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  Product         Product        @relation(fields: [productId], references: [id])
+  FiscalProduct   FiscalProduct? @relation(fields: [fiscalProductId], references: [id])
+  fiscalProductId String?
 }

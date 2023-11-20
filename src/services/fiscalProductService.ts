@@ -7,12 +7,13 @@ export class FiscalProductService implements IService {
     private fiscalProductRepository = new FiscalProductRepository();
 
     async create(data: CreateFiscalProductDTO) {
-        const service = await this.fiscalProductRepository.create(data);
 
+        const service = await this.fiscalProductRepository.create(data);
         return service;
     }
 
     async update(id: string, data: FiscalProductDTO) {
+
         const updatedFiscalProduct  = await this.fiscalProductRepository.update(id, data);
 
         return updatedFiscalProduct;

@@ -12,3 +12,5 @@ export * from './product';
 export * from './supplier';
 export * from './person';
 export * from './measurementUnite';
+export * from './fiscalProduct';
+export * from './productEntries';
