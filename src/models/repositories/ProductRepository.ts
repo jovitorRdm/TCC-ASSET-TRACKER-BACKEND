@@ -9,6 +9,7 @@ import {
 import { excludeFields } from "../../helpers/utils";
 import { FindAllArgs } from "../../interfaces";
 import { FiscalProduct, Product } from "../domains";
+import { ProductType } from "../dtos/productType";
 
 export class ProductRepository {
   async create({
@@ -18,6 +19,10 @@ export class ProductRepository {
     consumptionPerPerson,
     quantity,
     value,
+    numberDay,
+    percentage,
+    productType,
+    SaleValue,
   }: CreateProductDTO) {
     const existingProduct = await prismaClient.product.findUnique({
       where: { name },
@@ -33,7 +38,11 @@ export class ProductRepository {
       consumptionPerPerson,
       measurementUnit,
       (quantity = 0),
-      (value = 0)
+      (value = 0),
+      productType,
+      numberDay,
+      percentage,
+      SaleValue
     );
 
     product.validate();
@@ -46,6 +55,10 @@ export class ProductRepository {
         measurementUnit: product.measurementUnit,
         quantity: product.quantity,
         value: product.value,
+        productType: product.productType,
+        numberDay: product.numberDay,
+        percentage: product.percentage,
+        SaleValue: product.saleValue,
       },
     });
 
@@ -64,7 +77,11 @@ export class ProductRepository {
         productToUpdate.consumptionPerPerson,
         productToUpdate.measurementUnit as MeasurementUnit,
         productToUpdate.quantity,
-        productToUpdate.value
+        productToUpdate.value,
+        productToUpdate.productType as ProductType,
+        productToUpdate.numberDay,
+        productToUpdate.percentage,
+        productToUpdate.SaleValue
       );
 
       if (data.name !== undefined) product.name = data.name;
@@ -76,6 +93,12 @@ export class ProductRepository {
         product.measurementUnit = data.measurementUnit;
       if (data.quantity !== undefined) product.quantity = data.quantity;
       if (data.value !== undefined) product.value = data.value;
+
+      if (data.productType !== undefined)
+        product.productType = data.productType;
+      if (data.numberDay !== undefined) product.numberDay = data.numberDay;
+      if (data.percentage !== undefined) product.percentage = data.percentage;
+      if (data.SaleValue !== undefined) product.SaleValue = data.SaleValue;
       if (data.status !== undefined) product.status = data.status;
 
       product.validate();
@@ -99,6 +122,10 @@ export class ProductRepository {
           measurementUnit: product.measurementUnit,
           quantity: product.quantity,
           value: product.value,
+          productType: product.productType,
+          numberDay: product.numberDay,
+          percentage: product.percentage,
+          SaleValue: product.saleValue,
           status: product.status,
         },
       });

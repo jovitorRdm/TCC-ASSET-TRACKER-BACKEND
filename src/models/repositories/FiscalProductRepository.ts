@@ -85,8 +85,6 @@ export class FiscalProductRepository {
         }
 
         if (existingProduct) {
-          console.log(existingProduct);
-
           const newQuantity = existingProduct.quantity + product.quantity;
           const newValue = existingProduct.value + product.value;
 
@@ -232,37 +230,65 @@ export class FiscalProductRepository {
         },
       });
 
-      for (const product of data.productEntries) {
-        if (
-          typeof product === "object" &&
-          product?.productId &&
-          product?.quantity &&
-          product?.value
-        ) {
-          const existingProduct = await prismaClient.product.findUnique({
-            where: { id: product.productId },
-          });
-
-          if (existingProduct == null) {
-            throw new AppError(ErrorMessages.MSGE05);
-          }
-
-          if (existingProduct) {
-            console.log(existingProduct);
-
-            const newQuantity = existingProduct.quantity + product.quantity;
-            const newValue = existingProduct.value + product.value;
-
-            await prismaClient.product.update({
+      if (Array.isArray(data.productEntries)) {
+        for (const product of data.productEntries) {
+          if (
+            typeof product === "object" &&
+            product?.productId &&
+            product?.quantity &&
+            product?.value
+          ) {
+            const existingProduct = await prismaClient.product.findUnique({
               where: { id: product.productId },
-              data: {
-                quantity: newQuantity,
-                value: newValue,
-              },
             });
+
+            if (existingProduct == null) {
+              throw new AppError(ErrorMessages.MSGE05);
+            }
+
+            if (existingProduct) {
+              const newQuantity = existingProduct.quantity + product.quantity;
+              const newValue = existingProduct.value + product.value;
+
+              await prismaClient.product.update({
+                where: { id: product.productId },
+                data: {
+                  quantity: newQuantity,
+                  value: newValue,
+                },
+              });
+            }
           }
         }
       }
+
+      // if (updatedFiscalProduct.status === "inactive") {
+      //   for (const product of data.productEntries) {
+      //     if (
+      //       typeof product === "object" &&
+      //       product?.productId &&
+      //       product?.quantity &&
+      //       product?.value
+      //     ) {
+      //       const existingProduct = await prismaClient.product.findUnique({
+      //         where: { id: product.productId },
+      //       });
+
+      //       if (existingProduct == null) {
+      //         throw new AppError(ErrorMessages.MSGE05);
+      //       }
+
+      //       if (existingProduct) {
+      //         await prismaClient.product.update({
+      //           where: { id: product.id },
+      //           data: {
+      //             quantity: existingProduct.quantity - product.quantity,
+      //           },
+      //         });
+      //       }
+      //     }
+      //   }
+      // }
 
       return excludeFields(updatedFiscalProduct, ["createdAt", "updatedAt"]);
     } catch (e) {
