@@ -3,7 +3,8 @@ import { GenericStatus } from "./status";
 export interface CreateServiceDTO {
   name: string;
   description: string;
-  assignments: string[];
+  assignmentId: string;
+  saleValue: number;
 }
 
 export interface ServiceDTO extends CreateServiceDTO {
@@ -16,5 +17,6 @@ export interface UpdateServiceDTO {
   status?: GenericStatus;
   name?: string;
   description?: string;
-  assignments?: string[];
+  assignmentId?: string;
+  saleValue?: number;
 }

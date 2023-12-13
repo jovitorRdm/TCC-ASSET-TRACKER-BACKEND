@@ -1,50 +1,109 @@
 import { z } from "zod";
-import { BudgetDetailDTO } from "../dtos/budgetDetail";
-import { EventDTO } from "../dtos/event";
+import { TypeBudget } from "../dtos/budget";
+import { BudgetServicesDTO } from "../dtos/budgetServices";
+import { BudgetProductsDTO } from "../dtos/budgetProducts";
 
 export class Budget {
   constructor(
+    private _typeBudget: TypeBudget,
     private _customerId: string,
-    private _totalAmount: number,
+    private _numberPeople: number,
     private _pickupDate: Date,
-    private _budgetDetails?: BudgetDetailDTO[],
-    private _event?: EventDTO
+    private _returnDate: Date,
+    private _totalAmount: number,
+    private _totalCharged?: number,
+    private _eventTypeId?: string,
+    private _budgetServices?: BudgetServicesDTO[],
+    private _budgetProducts?: BudgetProductsDTO[],
+    private _discount?: number
   ) {}
 
-  get costumerId() {
+  get typeBudget() {
+    return this._typeBudget;
+  }
+
+  get customerId() {
     return this._customerId;
   }
 
-  get totalAmount() {
-    return this._totalAmount;
+  get numberPeople() {
+    return this._numberPeople;
   }
 
   get pickupDate() {
     return this._pickupDate;
   }
 
-  get budgetDetails() {
-    return this._budgetDetails;
+  get returnDate() {
+    return this._returnDate;
   }
 
-  get event() {
-    return this._event;
+  get totalAmount() {
+    return this._totalAmount;
+  }
+
+  get eventTypeId() {
+    return this._eventTypeId;
+  }
+
+  get budgetServices() {
+    return this._budgetServices;
+  }
+
+  get budgetProducts() {
+    return this._budgetProducts;
+  }
+
+  get discount() {
+    return this._discount;
+  }
+
+  get totalCharged() {
+    return this._totalCharged;
+  }
+
+  set typeBudget(typeBudget: TypeBudget) {
+    this._typeBudget = typeBudget;
   }
 
   set costumerId(customerId: string) {
     this._customerId = customerId;
   }
 
-  set totalAmount(totalAmount: number) {
-    this._totalAmount = totalAmount;
+  set numberPeople(numberPeople: number) {
+    this._numberPeople = numberPeople;
   }
 
   set pickupDate(pickupDate: Date) {
     this._pickupDate = pickupDate;
   }
 
-  set budgetDetails(budgetDetails: BudgetDetailDTO[]) {
-    this._budgetDetails = budgetDetails;
+  set returnDate(returnDate: Date) {
+    this._returnDate = returnDate;
+  }
+
+  set totalAmount(totalAmount: number) {
+    this._totalAmount = totalAmount;
+  }
+
+  set eventTypeId(eventTypeId: string) {
+    this._eventTypeId = eventTypeId;
+  }
+
+  set budgetServices(budgetServices: BudgetServicesDTO[]) {
+    this._budgetServices = budgetServices;
+  }
+
+  set budgetProducts(budgetProducts: BudgetProductsDTO[]) {
+    this._budgetProducts = budgetProducts;
+  }
+
+  set discount(discount: number) {
+    this._discount = discount;
+  }
+
+  set totalCharged(totalCharged: number) {
+    this._totalCharged = totalCharged;
   }
 
   // validate() {
@@ -74,6 +133,5 @@ export class Budget {
   //         .optional(),
   //     })
   //     .partial({ costumerId: true });
-
   // }
 }

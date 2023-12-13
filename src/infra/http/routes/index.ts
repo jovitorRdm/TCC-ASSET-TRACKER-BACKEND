@@ -11,6 +11,7 @@ import { supplierRoutes } from "./supplier.routes";
 import { ensureAuthenticated } from "../middlewares";
 import { FiscalProductRoutes } from "./fiscalProduct.routes";
 import { budgetRoutes } from "./budget.routes";
+import { eventSalonsRoutes } from "./eventSalons.routes";
 
 const router = Router();
 
@@ -26,5 +27,6 @@ router.use("/supplier", supplierRoutes);
 router.use("/login", AuthRouter);
 router.use("/fiscalProduct", FiscalProductRoutes);
 router.use("/budget", budgetRoutes);
+router.use("/eventSalons", eventSalonsRoutes);
 
 export { router };

@@ -160,7 +160,7 @@ export class Product {
         }),
       })
 
-      .partial({ id: true, status: true });
+      .partial({ id: true, status: true, productType: true });
     try {
       productSchema.parse(this);
     } catch (err) {

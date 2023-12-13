@@ -1,27 +1,43 @@
-import {
-  BudgetDetailDTO,
-  CreateBudgetDetailDTO,
-  UpdateBudgetDetailDTO,
-} from "./budgetDetail";
-import { EventDTO, CreateEventDTO, UpdateEventDTO } from "./event";
+import { BudgetProductsDTO } from "./budgetProducts";
+import { BudgetServicesDTO } from "./budgetServices";
+import { GenericStatus } from "./status";
 
 export interface CreateBudgetDTO {
+  typeBudget: TypeBudget;
   customerId: string;
+  numberPeople: number;
   pickupDate: Date;
+  returnDate: Date;
   totalAmount: number;
-  event?: EventDTO;
-  budgetDetails?: BudgetDetailDTO[];
+  totalCharged?: number;
+  discount?: number;
+  eventTypeId?: string;
+  budgetServices?: BudgetServicesDTO[];
+  budgetProducts?: BudgetProductsDTO[];
 }
 
 export interface BudgetDTO extends CreateBudgetDTO {
   id: string;
+  status: GenericStatus;
 }
 
 export interface UpdateBudgetDTO {
-  id: string;
+  id?: string;
+  status?: GenericStatus;
+  typeBudget?: TypeBudget;
   customerId?: string;
+  numberPeople?: number;
   pickupDate?: Date;
+  returnDate?: Date;
   totalAmount?: number;
-  event?: EventDTO;
-  budgetDetails?: BudgetDetailDTO[];
+  totalCharged?: number;
+  discount?: number;
+  eventTypeId?: string;
+  budgetServices?: BudgetServicesDTO[];
+  budgetProducts?: BudgetProductsDTO[];
+}
+
+export enum TypeBudget {
+  event = "event",
+  rent = "rent",
 }

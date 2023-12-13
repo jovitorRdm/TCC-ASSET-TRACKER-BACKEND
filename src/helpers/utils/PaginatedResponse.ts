@@ -1,36 +1,37 @@
-import { Request } from 'express';
-import { AppError } from '../../infra/http/errors/AppError';
-import { IService } from '../../interfaces';
-import { GenericStatus, PaginatedDataResponseDTO } from '../../models/dtos';
+import { Request } from "express";
+import { AppError } from "../../infra/http/errors/AppError";
+import { IService } from "../../interfaces";
+import { GenericStatus, PaginatedDataResponseDTO } from "../../models/dtos";
+import { ProductType } from "../../models/dtos/productType";
 
 export class PaginatedResponse<T> {
-  constructor(private service: IService) { }
+  constructor(private service: IService) {}
 
   async get(req: Request) {
     if (req.query.page && isNaN(Number(req.query.page))) {
-      throw new AppError('A página deve ser um número');
+      throw new AppError("A página deve ser um número");
     }
 
     if (req.query.page && Number(req.query.page) < 1) {
-      throw new AppError('A página deve ser maior que 0');
+      throw new AppError("A página deve ser maior que 0");
     }
 
     if (req.query.pageSize && isNaN(Number(req.query.pageSize))) {
-      throw new AppError('O tamanho da página deve ser um número');
+      throw new AppError("O tamanho da página deve ser um número");
     }
 
-    
-
-    if (req.query.query &&
-      typeof req.query.query === 'string' &&
-      req.query.query.length < 3) {
+    if (
+      req.query.query &&
+      typeof req.query.query === "string" &&
+      req.query.query.length < 3
+    ) {
       throw new AppError(
-        'O termo de busca deve conter pelo menos 3 caracteres'
+        "O termo de busca deve conter pelo menos 3 caracteres"
       );
     }
 
     if (
-      typeof req.query.filterByStatus === 'string' &&
+      typeof req.query.filterByStatus === "string" &&
       !(req.query.filterByStatus in GenericStatus)
     ) {
       throw new AppError(`${req.query.filterByStatus} não é um status válido`);
@@ -46,6 +47,7 @@ export class PaginatedResponse<T> {
       take,
       searchTerm: req.query.query as string,
       filterByStatus: req.query.filterByStatus as GenericStatus,
+      filterByType: req.query.filterByType as ProductType,
     });
 
     const response: PaginatedDataResponseDTO<T> = {
@@ -54,6 +56,7 @@ export class PaginatedResponse<T> {
       totalPages: Math.ceil(totalItems / pageSize),
       query: req.query.query as string,
       filterByStatus: req.query.filterByStatus as GenericStatus,
+      filterByType: req.query.filterByType as ProductType,
     };
 
     return response;

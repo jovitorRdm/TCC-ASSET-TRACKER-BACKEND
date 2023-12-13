@@ -37,6 +37,11 @@ enum Status {
   inactive
 }
 
+enum TypeBudget {
+  event
+  rent
+}
+
 model EventType {
   id          String   @id @default(uuid())
   name        String   @unique @db.VarChar(120)
@@ -44,7 +49,7 @@ model EventType {
   status      Status   @default(active)
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
-  Event       Event[]
+  Budget      Budget[]
 
   @@map("event_types")
 }
@@ -57,11 +62,13 @@ model Assignment {
   paymentValue       Float
   status             Status        @default(active)
   accountRequirement Boolean       @default(false)
-  accountType        AccountType?
-  createdAt          DateTime      @default(now()) @map("created_at")
-  updatedAt          DateTime      @updatedAt @map("updated_at")
-  Employee           Employee[]
-  services           Service[]
+
+  accountType  AccountType?
+  peopleServed Float        @default(0)
+  createdAt    DateTime     @default(now()) @map("created_at")
+  updatedAt    DateTime     @updatedAt @map("updated_at")
+  Employee     Employee[]
+  services     Service[]
 
   @@map("assignment")
 }
@@ -77,16 +84,17 @@ model Account {
 }
 
 model Address {
-  id           String   @id @default(uuid())
-  cep          String   @db.VarChar(8)
-  city         String   @db.VarChar(120)
-  state        String   @db.VarChar(2)
-  neighborhood String   @db.VarChar(120)
-  street       String   @db.VarChar(120)
-  number       String   @db.VarChar(10)
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  id           String        @id @default(uuid())
+  cep          String        @db.VarChar(8)
+  city         String        @db.VarChar(120)
+  state        String        @db.VarChar(2)
+  neighborhood String        @db.VarChar(120)
+  street       String        @db.VarChar(120)
+  number       String        @db.VarChar(10)
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
   Person       Person?
+  EventSalons  EventSalons[]
 
   @@map("addresses")
 }
@@ -122,7 +130,7 @@ model Customer {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  Budget Budget?
+  Budget Budget[]
 
   @@map("costumer")
 }
@@ -154,15 +162,16 @@ model Supplier {
 }
 
 model Service {
-  id           String         @id @default(uuid())
-  name         String         @unique @db.VarChar(120)
-  description  String?        @db.VarChar(500)
-  status       Status         @default(active)
-  assignments  Assignment[]
-  createdAt    DateTime       @default(now()) @map("created_at")
-  updatedAt    DateTime       @updatedAt @map("updated_at")
-  BudgetDetail BudgetDetail[]
-  EventService EventService[]
+  id             String           @id @default(uuid())
+  name           String           @unique @db.VarChar(120)
+  description    String?          @db.VarChar(500)
+  status         Status           @default(active)
+  assignmentId   String
+  saleValue      Float            @default(0)
+  createdAt      DateTime         @default(now()) @map("created_at")
+  updatedAt      DateTime         @updatedAt @map("updated_at")
+  Assignment     Assignment       @relation(fields: [assignmentId], references: [id])
+  BudgetServices BudgetServices[]
 
   @@map("service")
 }
@@ -184,9 +193,8 @@ model Product {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  ProductEntry ProductEntry[]
-  BudgetDetail BudgetDetail[]
-  EventProduct EventProduct[]
+  ProductEntry   ProductEntry[]
+  BudgetProducts BudgetProducts[]
 
   @@map("product")
 }
@@ -225,86 +233,68 @@ model ProductEntry {
 }
 
 model Budget {
-  id          String   @id @default(uuid())
-  customerId  String   @unique
-  pickupDate  DateTime
-  totalAmount Float    @default(0)
+  id            String           @id @default(uuid())
+  status        Status           @default(active)
+  typeBudget    TypeBudget       @default(rent)
+  customerId    String
+  numberPeople  Float
+  pickupDate    DateTime
+  returnDate    DateTime
+  totalAmount   Float            @default(0)
+  totalCharged  Float            @default(0)
+  discount      Float            @default(0)
+  eventTypeId   String?
+  budgetService BudgetServices[]
+  budgetProduct BudgetProducts[]
 
-  eventId       String?
-  Event         Event?         @relation(fields: [eventId], references: [id])
-  BudgetDetails BudgetDetail[]
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-  Customer  Customer @relation(fields: [customerId], references: [id])
+  createdAt DateTime   @default(now()) @map("created_at")
+  updatedAt DateTime   @updatedAt @map("updated_at")
+  Customer  Customer?  @relation(fields: [customerId], references: [id])
+  eventType EventType? @relation(fields: [eventTypeId], references: [id])
 
   @@map("budget")
 }
 
-model BudgetDetail {
-  id         String  @id @default(uuid())
-  budgetId   String
-  productId  String?
-  serviceId  String?
-  name       String
-  quantity   Float
-  unitPrice  Float
-  totalPrice Float
-  discount   Float?
+model BudgetServices {
+  serviceId String
+  unitPrice Float
+  quantity  Float
 
+  id        String   @id @default(uuid())
+  budgetId  String
   Budget    Budget   @relation(fields: [budgetId], references: [id])
-  Product   Product? @relation(fields: [productId], references: [id])
-  Service   Service? @relation(fields: [serviceId], references: [id])
+  Service   Service  @relation(fields: [serviceId], references: [id])
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  @@map("budget_details")
+  @@map("budget_services")
 }
 
-model Event {
-  id           String         @id @default(uuid())
-  eventTypeId  String
-  name         String         @unique @db.VarChar(120)
-  description  String?        @db.VarChar(500)
-  EventService EventService[]
-  EventProduct EventProduct[]
+model BudgetProducts {
+  productId String
+  unitPrice Float
+  quantity  Float
 
-  eventType EventType @relation(fields: [eventTypeId], references: [id])
-  createdAt DateTime  @default(now()) @map("created_at")
-  updatedAt DateTime  @updatedAt @map("updated_at")
-  Budget    Budget[]
+  id        String   @id @default(uuid())
+  budgetId  String
+  Budget    Budget   @relation(fields: [budgetId], references: [id])
+  Product   Product  @relation(fields: [productId], references: [id])
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-  @@map("events")
+  @@map("budget_products")
 }
 
-model EventProduct {
-  id         String @id @default(uuid())
-  productId  String
-  name       String
-  quantity   Float
-  unitPrice  Float
-  totalPrice Float
-  discount   Float
+model EventSalons {
+  id          String  @id @default(uuid())
+  status      Status  @default(active)
+  name        String
+  description String
+  address     Address @relation(fields: [addressId], references: [id])
+  addressId   String
+  value       Float
+  capacity    Float
 
-  eventId String
-  Event   Event   @relation(fields: [eventId], references: [id])
-  Product Product @relation(fields: [productId], references: [id])
-
-  @@map("event_products")
-}
-
-model EventService {
-  id         String @id @default(uuid())
-  serviceId  String
-  name       String
-  quantity   Float
-  unitPrice  Float
-  totalPrice Float
-  discount   Float
-
-  eventId String
-  Event   Event   @relation(fields: [eventId], references: [id])
-  Service Service @relation(fields: [serviceId], references: [id])
-
-  @@map("event_services")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 }

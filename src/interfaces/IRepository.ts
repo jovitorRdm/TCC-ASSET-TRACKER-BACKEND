@@ -1,10 +1,12 @@
-import { GenericStatus } from '../models/dtos';
+import { GenericStatus } from "../models/dtos";
+import { ProductType } from "../models/dtos/productType";
 
 export type FindAllArgs = {
   skip?: number;
   take?: number;
   searchTerm?: string;
   filterByStatus?: GenericStatus;
+  filterByType?: ProductType;
   itemsToExclude?: string[];
 };
 

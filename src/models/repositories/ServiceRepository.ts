@@ -1,4 +1,4 @@
-import { parseArrayOfData, excludeFields} from "../../helpers/utils";
+import { parseArrayOfData, excludeFields } from "../../helpers/utils";
 import { AppError, ErrorMessages } from "../../infra/http/errors";
 import { prismaClient } from "../../infra/prisma";
 import { FindAllArgs, IRepository } from "../../interfaces";
@@ -6,26 +6,21 @@ import { Service } from "../domains/Service";
 import { CreateServiceDTO, GenericStatus, UpdateServiceDTO } from "../dtos";
 
 export class ServiceRepository implements IRepository {
-
-  async create({ 
-    name, 
-    description, 
-    assignments 
+  async create({
+    name,
+    description,
+    assignmentId,
+    saleValue,
   }: CreateServiceDTO) {
     const existingService = await prismaClient.service.findUnique({
-      where: { name }
-      
+      where: { name },
     });
 
     if (existingService) {
       throw new AppError(ErrorMessages.MSGE02);
     }
 
-    const service = new Service(
-      name, 
-      description, 
-      assignments
-    );
+    const service = new Service(name, description, assignmentId, saleValue);
 
     service.validate();
 
@@ -33,51 +28,67 @@ export class ServiceRepository implements IRepository {
       data: {
         name: service.name,
         description: service.description,
-        assignments: {
-          connect: service.assignments.map((id) => ({ id: id }))
-        }
-      }
-      
+        Assignment: {
+          connect: {
+            id: service.assignmentId,
+          },
+        },
+        saleValue: service.saleValue,
+      },
+      include: {
+        Assignment: true,
+      },
     });
 
-    return excludeFields(createService, ['createdAt', 'updatedAt'])
+    return excludeFields(createService, ["createdAt", "updatedAt"]);
   }
   async update(id: string, data: UpdateServiceDTO) {
     try {
-      const serviceToUpdate = await prismaClient.service.findUniqueOrThrow({ 
-        where: { id }, 
-        include: { assignments: true } 
-      });  
+      const serviceToUpdate = await prismaClient.service.findUniqueOrThrow({
+        where: { id },
+        include: { Assignment: true },
+      });
 
       const service = new Service(
         serviceToUpdate.name,
         serviceToUpdate.description as string,
-        serviceToUpdate.assignments.map((assignment) => assignment.id),
+        serviceToUpdate.assignmentId,
+        serviceToUpdate.saleValue
       );
 
       if (data.name !== undefined) service.name = data.name;
-      if (data.description !== undefined) service.description = data.description;
+      if (data.description !== undefined)
+        service.description = data.description;
       if (data.status !== undefined) service.status = data.status;
-      if (data.assignments !== undefined) service.assignments = data.assignments;
+      if (data.assignmentId !== undefined)
+        service.assignmentId = data.assignmentId;
+      if (data.saleValue !== undefined) service.saleValue = data.saleValue;
 
       service.validate();
 
-      const needsToUpdateAssignments = JSON.stringify(serviceToUpdate.assignments) !== JSON.stringify(service.assignments);
+      const needsToUpdateAssignments =
+        JSON.stringify(serviceToUpdate.assignmentId) !==
+        JSON.stringify(service.assignmentId);
 
-      if(needsToUpdateAssignments) {
+      if (needsToUpdateAssignments) {
         await prismaClient.service.update({
           where: { id },
           data: {
-            assignments: {
-              disconnect: serviceToUpdate.assignments.map((assignment) => ({ id: assignment.id }))
-            }
-          }
-        })
+            Assignment: {
+              connect: {
+                id: service.assignmentId,
+              },
+            },
+          },
+          include: {
+            Assignment: true,
+          },
+        });
       }
 
       if (service.name !== serviceToUpdate.name) {
         const existingService = await prismaClient.service.findUnique({
-          where: { name: service.name }
+          where: { name: service.name },
         });
 
         if (existingService) {
@@ -91,16 +102,18 @@ export class ServiceRepository implements IRepository {
           name: service.name,
           description: service.description,
           status: service.status,
-          assignments: needsToUpdateAssignments ? {
-            connect: service.assignments.map((assignmentId) => ({ id: assignmentId })) 
-          }: undefined
+          Assignment: {
+            connect: {
+              id: service.assignmentId,
+            },
+          },
         },
         include: {
-          assignments: true
-        }
+          Assignment: true,
+        },
       });
 
-      return excludeFields(updatedService, ['createdAt', 'updatedAt']);
+      return excludeFields(updatedService, ["createdAt", "updatedAt"]);
     } catch (e) {
       if (e instanceof AppError) throw e;
 
@@ -111,17 +124,17 @@ export class ServiceRepository implements IRepository {
     const where = {
       OR: args.searchTerm
         ? [
-          {
-            name: {
-              contains: args?.searchTerm,
+            {
+              name: {
+                contains: args?.searchTerm,
+              },
             },
-          },
-          {
-            description: {
-              contains: args?.searchTerm,
+            {
+              description: {
+                contains: args?.searchTerm,
+              },
             },
-          },
-        ]
+          ]
         : undefined,
       status: {
         equals: args?.filterByStatus,
@@ -133,18 +146,16 @@ export class ServiceRepository implements IRepository {
     const data = await prismaClient.service.findMany({
       where,
       include: {
-        assignments: true
+        Assignment: true,
       },
-      orderBy: { createdAt: 'asc' },
+      orderBy: { createdAt: "asc" },
       skip: args?.skip,
       take: args?.take,
     });
 
     return {
-      data: parseArrayOfData(data, ['createdAt', 'updatedAt']),
+      data: parseArrayOfData(data, ["createdAt", "updatedAt"]),
       totalItems,
     };
   }
-
-  
 }

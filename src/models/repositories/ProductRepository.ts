@@ -169,6 +169,9 @@ export class ProductRepository {
       status: {
         equals: args?.filterByStatus,
       },
+      productType: {
+        equals: args?.filterByType,
+      },
     };
     const totalItems = await prismaClient.product.count({
       where,

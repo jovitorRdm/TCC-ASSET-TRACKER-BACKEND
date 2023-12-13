@@ -6,7 +6,8 @@ export class Service {
   constructor(
     private _name: string,
     private _description: string,
-    private _assignments: string[],
+    private _assignmentId: string,
+    private _saleValue: number,
     private _status?: GenericStatus,
     private _id?: string
   ) {}
@@ -23,8 +24,12 @@ export class Service {
     return this._description;
   }
 
-  get assignments() {
-    return this._assignments;
+  get assignmentId() {
+    return this._assignmentId;
+  }
+
+  get saleValue() {
+    return this._saleValue;
   }
 
   get status() {
@@ -43,8 +48,12 @@ export class Service {
     this._description = description;
   }
 
-  set assignments(assignments: string[]) {
-    this._assignments = assignments;
+  set assignmentId(assignmentId: string) {
+    this._assignmentId = assignmentId;
+  }
+
+  set saleValue(saleValue: number) {
+    this._saleValue = saleValue;
   }
 
   set status(status: GenericStatus) {
@@ -54,7 +63,7 @@ export class Service {
   validate() {
     const serviceSchema = z
       .object({
-        id: z.string().uuid('id inválido'),
+        id: z.string().uuid("id inválido"),
         status: z.enum([GenericStatus.active, GenericStatus.inactive], {
           errorMap: () => new AppError(ErrorMessages.MSGE06),
         }),
@@ -63,7 +72,8 @@ export class Service {
           .min(3, ErrorMessages.MSGE08)
           .max(120, ErrorMessages.MSGE09),
         description: z.string().max(500, ErrorMessages.MSGE09),
-        assignments: z.array(z.string().uuid('id de atribuição inválido')),
+        assignmentId: z.string().uuid("assignmentId inválido"),
+        saleValue: z.number(),
       })
       .partial({ id: true, status: true });
 
